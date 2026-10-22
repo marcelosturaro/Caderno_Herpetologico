@@ -6,11 +6,20 @@
 <title>Caderno Herpetológico</title>
 <meta name="description" content="Aplicativo para a coleta de dados de espécies de anfíbios e répteis em campo.">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0f5c5c">
+<meta name="theme-color" content="#1f5a30">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
+<script>
+/* Captura o evento de instalação o mais cedo possível (antes do script principal) */
+window.__bip = null;
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  window.__bip = e;
+  window.dispatchEvent(new Event("bip-ready"));
+});
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Caderno Herp">
@@ -149,17 +158,11 @@ textarea.out{width:100%;min-height:120px;margin-top:10px;font:13px monospace}
   </div>
 </div>
 
-<!-- Modal de instruções genérico (Android / Desktop) -->
+<!-- Modal de instruções (Android / Desktop / navegadores sem prompt) -->
 <div class="modal" id="installModal" hidden role="dialog" aria-modal="true" aria-labelledby="installModalTitle">
   <div class="modal-c">
     <h3 id="installModalTitle">Instalar aplicativo</h3>
-    <p>Para instalar o <em>Caderno Herpetológico</em>:</p>
-    <ol>
-      <li>Abra o menu do navegador (o ícone <strong>⋮</strong> ou <strong>≡</strong>).</li>
-      <li>Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
-      <li>Confirme em <strong>Instalar</strong> ou <strong>Adicionar</strong>.</li>
-    </ol>
-    <p>O ícone do <em>Caderno Herpetológico</em> aparecerá na sua tela inicial, com funcionamento offline.</p>
+    <div id="installModalBody"></div>
     <button type="button" id="closeInstallModal">Entendi</button>
   </div>
 </div>
@@ -368,11 +371,12 @@ function setAccDate(){
      2) iOS → modal com instruções do Safari
      3) demais (Android sem prompt / Desktop / outros) → modal genérico
    ============================================================ */
-var deferredPrompt = null,
+var deferredPrompt = window.__bip || null,
     installWrap   = $("installWrap"),
     installBtn    = $("installBtn"),
     iosModal      = $("iosModal"),
-    installModal  = $("installModal");
+    installModal  = $("installModal"),
+    installBody   = $("installModalBody");
 
 function isStandalone(){
   try{
@@ -380,7 +384,8 @@ function isStandalone(){
     if(window.navigator.standalone === true) return true;
     if(window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) return true;
     if(window.matchMedia && window.matchMedia("(display-mode: minimal-ui)").matches) return true;
-  }catch(e){}
+    if(document.referrer && document.referrer.indexOf("android-app://") === 0) return true;
+  }catch(err){}
   return false;
 }
 function isIOS(){
@@ -389,31 +394,64 @@ function isIOS(){
   if(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
   return false;
 }
-
-function hideInstall(){
-  if(installWrap) installWrap.hidden = true;
+function isAndroid(){ return /Android/i.test(navigator.userAgent || ""); }
+/* Navegadores embutidos (WhatsApp, Instagram, Facebook, Telegram, WebView) não instalam PWA */
+function isInApp(){
+  return /FBAN|FBAV|Instagram|MicroMessenger|Telegram|WhatsApp|; wv\)/i.test(navigator.userAgent || "");
 }
+function isFirefox(){ return /Firefox|FxiOS/i.test(navigator.userAgent || ""); }
+
+function hideInstall(){ if(installWrap) installWrap.hidden = true; }
 function refreshInstall(){
   if(!installWrap) return;
   installWrap.hidden = isStandalone();
 }
 
+function mostrarInstrucoes(){
+  var t = "";
+  if(isInApp()){
+    t = "<p>Este link foi aberto dentro de outro aplicativo (WhatsApp, Instagram etc.), que <strong>não permite instalar</strong>.</p>"+
+        "<ol><li>Toque no menu <strong>⋮</strong> do canto superior.</li>"+
+        "<li>Escolha <strong>Abrir no Chrome</strong> (ou <em>Abrir no navegador</em>).</li>"+
+        "<li>No Chrome, toque novamente em <strong>Instalar aplicativo</strong>.</li></ol>";
+  }else if(isFirefox()){
+    t = "<ol><li>Abra o menu <strong>⋮</strong> do Firefox.</li>"+
+        "<li>Toque em <strong>Instalar</strong> (ou <strong>Adicionar à tela inicial</strong>).</li>"+
+        "<li>Confirme.</li></ol>";
+  }else if(isAndroid()){
+    t = "<p>O navegador ainda não liberou a instalação automática. Aguarde alguns segundos e toque de novo no botão, ou instale pelo menu:</p>"+
+        "<ol><li>Abra o menu <strong>⋮</strong> do Chrome.</li>"+
+        "<li>Escolha <strong>Instalar aplicativo</strong> (ou <strong>Adicionar à tela inicial</strong>).</li>"+
+        "<li>Confirme em <strong>Instalar</strong>.</li></ol>"+
+        "<p class=\"hint\">Se a opção não aparecer, atualize a página e tente novamente.</p>";
+  }else{
+    t = "<ol><li>Clique no ícone de instalação na barra de endereços (ou no menu <strong>⋮</strong>).</li>"+
+        "<li>Escolha <strong>Instalar Caderno Herpetológico</strong>.</li>"+
+        "<li>Confirme em <strong>Instalar</strong>.</li></ol>";
+  }
+  if(installBody) installBody.innerHTML = t;
+  if(installModal) installModal.hidden = false;
+}
+
 if(installBtn){
   installBtn.addEventListener("click", function(){
-    if(deferredPrompt){
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(function(c){
-        if(c && c.outcome === "accepted") hideInstall();
-        deferredPrompt = null;
-        refreshInstall();
-      }).catch(function(){ deferredPrompt = null; refreshInstall(); });
+    var dp = deferredPrompt || window.__bip;
+    if(dp){
+      deferredPrompt = null; window.__bip = null;   /* o evento só pode ser usado uma vez */
+      try{
+        dp.prompt();
+        Promise.resolve(dp.userChoice).then(function(c){
+          if(c && c.outcome === "accepted") hideInstall();
+          refreshInstall();
+        }).catch(function(){ refreshInstall(); });
+      }catch(err){ mostrarInstrucoes(); }
       return;
     }
     if(isIOS()){
       if(iosModal) iosModal.hidden = false;
       return;
     }
-    if(installModal) installModal.hidden = false;
+    mostrarInstrucoes();
   });
 }
 
@@ -434,13 +472,12 @@ document.addEventListener("keydown", function(e){
   }
 });
 
-window.addEventListener("beforeinstallprompt", function(e){
-  e.preventDefault();
-  deferredPrompt = e;
+window.addEventListener("bip-ready", function(){
+  deferredPrompt = window.__bip;
   refreshInstall();
 });
 window.addEventListener("appinstalled", function(){
-  deferredPrompt = null;
+  deferredPrompt = null; window.__bip = null;
   hideInstall();
   if(iosModal)     iosModal.hidden     = true;
   if(installModal) installModal.hidden = true;
@@ -452,13 +489,15 @@ if(window.matchMedia){
     var onCh = function(){ refreshInstall(); };
     if(mq.addEventListener) mq.addEventListener("change", onCh);
     else if(mq.addListener) mq.addListener(onCh);
-  }catch(e){}
+  }catch(err){}
 }
 
 spLoad();load();loadLast();render();fresh();setAccDate();refreshInstall();
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js").catch(function(err){
-    console.error("[PWA] Falha ao registrar o Service Worker:", err);
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js", {scope: "./", updateViaCache: "none"})
+      .then(function(reg){ try{ reg.update(); }catch(err){} })
+      .catch(function(err){ console.error("[PWA] Falha ao registrar o Service Worker:", err); });
   });
 }
 })();

@@ -54,6 +54,8 @@ e exporta em CSV.
 | `manifest.webmanifest` | Metadados do PWA (nome, ícones, cores, `id`) |
 | `sw.js` | Service Worker — cache offline |
 | `icon-192.png` | Ícone 192×192 (Android) |
+| `favicon-48.png` | Favicon 48×48 |
+| `apple-touch-icon.png` | Ícone 180×180 (iOS) |
 | `icon-512.png` | Ícone 512×512 (Android / splash) |
 | `icon-maskable-512.png` | Ícone adaptativo (Android) |
 | `.nojekyll` | Desativa Jekyll no GitHub Pages |

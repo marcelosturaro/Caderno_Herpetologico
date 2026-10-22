@@ -1,10 +1,10 @@
 /* ============================================================
    Caderno Herpetológico — Service Worker
-   v3: força atualização do index.html e do manifest em cache.
-       (v2 servia o index.html antigo sem o botão de instalação)
+   v4: ícones/manifest corrigidos; só armazena respostas válidas (200);
+       HTML em "rede primeiro" com fallback offline; demais em cache primeiro.
    ============================================================ */
 
-var CACHE = "caderno-herp-v3";
+var CACHE = "caderno-herp-v4";
 
 var ESSENCIAIS = [
   "./",
@@ -13,7 +13,8 @@ var ESSENCIAIS = [
   "./icon-192.png",
   "./icon-512.png",
   "./icon-maskable-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./favicon-48.png"
 ];
 
 self.addEventListener("install", function (e) {
@@ -22,7 +23,7 @@ self.addEventListener("install", function (e) {
       .then(function (c) {
         return Promise.all(
           ESSENCIAIS.map(function (url) {
-            return c.add(url).catch(function () {});
+            return c.add(new Request(url, { cache: "reload" })).catch(function () {});
           })
         );
       })
@@ -47,9 +48,8 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
 
   if (req.method !== "GET") return;
-  if (!req.url.startsWith("http")) return;
-
-  if (req.url.indexOf("servicodados.ibge.gov.br") > -1) return;
+  if (req.url.indexOf("http") !== 0) return;
+  if (req.url.indexOf("servicodados.ibge.gov.br") > -1) return;   // IBGE: cache próprio do app
 
   var ehHTML = req.mode === "navigate" ||
                (req.headers.get("accept") || "").indexOf("text/html") > -1;
@@ -58,13 +58,15 @@ self.addEventListener("fetch", function (e) {
     e.respondWith(
       fetch(req)
         .then(function (r) {
-          var cp = r.clone();
-          caches.open(CACHE).then(function (c) { c.put(req, cp); });
+          if (r && r.status === 200) {
+            var cp = r.clone();
+            caches.open(CACHE).then(function (c) { c.put(req, cp); });
+          }
           return r;
         })
         .catch(function () {
-          return caches.match(req).then(function (r) {
-            return r || caches.match("./index.html");
+          return caches.match(req, { ignoreSearch: true }).then(function (r) {
+            return r || caches.match("./index.html") || caches.match("./");
           });
         })
     );
@@ -80,8 +82,6 @@ self.addEventListener("fetch", function (e) {
           caches.open(CACHE).then(function (c) { c.put(req, cp); });
         }
         return r;
-      }).catch(function () {
-        if (ehHTML) return caches.match("./index.html");
       });
     })
   );

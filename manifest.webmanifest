@@ -3,32 +3,19 @@
   "short_name": "Caderno Herp",
   "description": "Aplicativo para a coleta de dados de espécies de anfíbios e répteis em campo.",
   "id": "/Caderno_Herpetologico/",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#eef1ec",
-  "theme_color": "#0f5c5c",
+  "theme_color": "#1f5a30",
   "lang": "pt-BR",
   "dir": "ltr",
+  "categories": ["science", "education", "productivity"],
   "prefer_related_applications": false,
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
