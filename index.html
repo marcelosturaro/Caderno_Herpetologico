@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Caderno Herpetológico</title>
+<meta name="description" content="Aplicativo para a coleta de dados de espécies de anfíbios e répteis em campo.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f5c5c">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Caderno Herp">
+<style>
+:root{--bg:#eef1ec;--card:#fafbf8;--ink:#1d2b26;--mut:#5b6b64;--line:#c9d2cb;--acc:#0f5c5c;--accink:#fff;--warn:#a63a3a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a17;--card:#1b2622;--ink:#e6ede9;--mut:#9aaba3;--line:#2f3f39;--acc:#4fb3a9;--accink:#08201d;--warn:#e07b7b}}
+:root[data-theme="dark"]{--bg:#121a17;--card:#1b2622;--ink:#e6ede9;--mut:#9aaba3;--line:#2f3f39;--acc:#4fb3a9;--accink:#08201d;--warn:#e07b7b}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:4px 0 2px}
+.sub{color:var(--mut);margin:0 0 12px}
+form,.list{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:16px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f{display:flex;flex-direction:column;gap:3px;min-width:0}
+.w{grid-column:1/-1}
+label{font-size:.9rem;color:var(--mut)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;width:100%;min-height:44px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+textarea{min-height:70px;resize:vertical}
+button{font:inherit;min-height:44px;border-radius:6px;border:1px solid var(--acc);background:var(--acc);color:var(--accink);padding:0 14px;cursor:pointer;font-weight:700}
+button.s{background:transparent;color:var(--acc)}
+button.d{background:transparent;color:var(--warn);border-color:var(--line)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.row>button{flex:1}
+.gps{font-size:.9rem;color:var(--mut);margin:0 0 4px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.top h2{font-size:1.1rem;margin:0}
+.it{border-top:1px solid var(--line);padding:10px 0;display:flex;gap:10px;justify-content:space-between;align-items:center}
+.it b{display:block}
+.it span{color:var(--mut);font-size:.9rem}
+.it .b{display:flex;gap:6px}
+.it button{min-height:40px;padding:0 10px}
+.empty{color:var(--mut);margin:6px 0}
+textarea.out{width:100%;min-height:120px;margin-top:10px;font:13px monospace}
+.msg{margin:10px 0 0;color:var(--mut);font-size:.9rem}
+.ac{position:relative}.sug{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:6px;max-height:230px;overflow:auto}.sug button{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:0;border-bottom:1px solid var(--line);border-radius:0;font-weight:400;font-style:italic;padding:11px 10px}.sug .nw{padding:10px;color:var(--mut);font-size:.9rem}summary{cursor:pointer;font-weight:700}details.list textarea{min-height:120px}.hint{display:block;font-size:.78rem;color:var(--mut);font-style:italic;margin-top:2px}.ref{padding-left:1.4em;text-indent:-1.4em;word-break:break-word}.ref a{color:var(--acc)}
+
+/* ---------- Instalação ---------- */
+.install-wrap{margin:0 0 16px}
+.install-wrap button{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;font-size:.98rem}
+.install-wrap svg{width:20px;height:20px;flex-shrink:0}
+@media (display-mode: standalone),
+       (display-mode: fullscreen),
+       (display-mode: minimal-ui) {
+  #installWrap { display: none !important; }
+}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;animation:fade .18s ease}
+.modal[hidden]{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal-c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:400px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.modal-c h3{margin:0 0 10px;font-size:1.15rem}
+.modal-c p{margin:0 0 12px;color:var(--mut);font-size:.92rem}
+.modal-c ol{margin:0 0 16px;padding-left:1.35em}
+.modal-c li{margin-bottom:10px;line-height:1.5}
+.modal-c button{width:100%}
+.ios-ic{display:inline-block;vertical-align:-3px;width:18px;height:18px;margin:0 2px}
+@media (prefers-reduced-motion:reduce){.modal{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Caderno Herpetológico</h1>
+<p class="sub">Aplicativo para a coleta de dados de espécies de anfíbios e répteis em campo. Inserir um registro por espécime. Os dados ficam salvos neste aparelho até você exportar.</p>
+
+<div class="install-wrap" id="installWrap">
+  <button type="button" id="installBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    <span id="installLabel">Instalar aplicativo</span>
+  </button>
+</div>
+
+<form id="f" autocomplete="off">
+<p class="gps" id="gps">Buscando localização…</p>
+<div class="g">
+<div class="f"><label for="num">Nº de campo</label><input id="num" required></div>
+<div class="f"><label for="sexo">Sexo</label><select id="sexo"><option value="">—</option><option>Macho</option><option>Fêmea</option><option>Indeterminado</option><option>Juvenil</option><option>Girino</option></select><small class="hint">Selecione a opção.</small></div>
+<div class="f w ac"><label for="esp">Espécie</label><input id="esp" required autocomplete="off" autocapitalize="off"><small class="hint">Preenchimento automático.</small><div class="sug" id="sug" hidden></div></div>
+<div class="f w ac"><label for="uf">Estado</label><input id="uf" autocomplete="off" autocapitalize="off" placeholder="Ex.: Bahia ou BA"><small class="hint">Preenchimento automático. Fica memorizado para o próximo registro.</small><div class="sug" id="sugUf" hidden></div></div>
+<div class="f w ac"><label for="mun">Município</label><input id="mun" autocomplete="off" autocapitalize="off" placeholder="Ex.: Salvador"><small class="hint">Preenchimento automático. A lista de municípios é baixada uma vez por estado e fica salva no aparelho. Fica memorizado para o próximo registro.</small><div class="sug" id="sugMun" hidden></div></div>
+<div class="f w"><label for="loc">Local</label><input id="loc"></div>
+<div class="f"><label for="dat">Data</label><input id="dat" inputmode="numeric" placeholder="AAAA-MM-DD" maxlength="10" autocomplete="off"></div>
+<div class="f"><label for="hor">Horário</label><input id="hor" inputmode="numeric" placeholder="HH:MM" maxlength="5" autocomplete="off"></div>
+<div class="f"><label for="lat">Latitude</label><input id="lat" inputmode="decimal"></div>
+<div class="f"><label for="lon">Longitude</label><input id="lon" inputmode="decimal"></div>
+<div class="f"><label for="mas">Massa (g)</label><input id="mas" inputmode="decimal"></div>
+<div class="f"><label for="svl">SVL (mm)</label><input id="svl" inputmode="decimal"></div>
+<div class="f"><label for="tl">TL (mm)</label><input id="tl" inputmode="decimal"></div>
+<div class="f"><label for="tempEsp">Temp. do Espécime (°C)</label><input id="tempEsp" inputmode="decimal"></div>
+<div class="f"><label for="tempSub">Temp. do Substrato (°C)</label><input id="tempSub" inputmode="decimal"></div>
+<div class="f"><label for="tempAr">Temp. do Ar (°C)</label><input id="tempAr" inputmode="decimal"></div>
+<div class="f"><label for="umid">Umidade do Ar (%)</label><input id="umid" inputmode="decimal"></div>
+<div class="f w"><label for="tec">Tipo de tecido</label><select id="tec"><option value="">—</option><option>Fígado</option><option>Músculo</option><option>Cauda</option><option>Pé</option><option>Outro</option></select><small class="hint">Selecione a opção.</small></div>
+<div class="f w"><label for="col">Coletores</label><input id="col" placeholder="Separe os nomes com ;"></div>
+<div class="f w"><label for="obs">Observações</label><textarea id="obs"></textarea></div>
+</div>
+<div class="row">
+<button type="button" class="s" id="relo">Atualizar localização</button>
+<button type="submit" id="sv">Salvar espécime</button>
+</div>
+</form>
+
+<section class="list">
+<div class="top"><h2 id="cnt">Registros</h2><button type="button" id="exp">Exportar CSV</button></div>
+<div id="items"></div>
+<p class="msg" id="msg"></p>
+<textarea class="out" id="out" readonly hidden></textarea>
+</section>
+
+<details class="list"><summary>Referências</summary>
+<p class="msg">A lista de espécies inclui os anfíbios (1251, Drummond et al., 2026) e os répteis (856, Guedes et al., 2023) do Brasil, conforme as listas da SBH. Espécies novas que você digitar são adicionadas automaticamente ao salvar.</p>
+<p class="msg ref">Drummond, L.O., Santana, D.J., Lima, A.P. &amp; Toledo, L.F. 2026. List of Amphibians of Brazil. <i>Herpetologia Brasileira</i> 15(2), Edição Especial "Lista Brasileira de Anfíbios e Répteis". Sociedade Brasileira de Herpetologia. DOI: <a href="https://doi.org/10.5281/zenodo.18340087" target="_blank" rel="noopener">10.5281/zenodo.18340087</a></p>
+<p class="msg ref">Guedes, T.B., Entiauspe-Neto, O.M. &amp; Costa, H.C. 2023. Lista de répteis do Brasil: atualização de 2022. <i>Herpetologia Brasileira</i> 12(1): 57–161. Sociedade Brasileira de Herpetologia. DOI: <a href="https://doi.org/10.5281/zenodo.7829013" target="_blank" rel="noopener">10.5281/zenodo.7829013</a></p></details>
+
+<details class="list"><summary>Créditos</summary>
+<p class="msg ref">Sturaro, M. J. 2026. <i>Caderno Herpetológico: caderno de campo digital para a coleta de dados de anfíbios e répteis brasileiros</i>. Disponível em: <a href="https://marcelosturaro.github.io/Caderno_Herpetologico" target="_blank" rel="noopener">https://marcelosturaro.github.io/Caderno_Herpetologico</a>. Acesso em: <span id="accdate">—</span>.</p>
+</details>
+</main>
+
+<!-- Modal de instruções iOS -->
+<div class="modal" id="iosModal" hidden role="dialog" aria-modal="true" aria-labelledby="iosTitle">
+  <div class="modal-c">
+    <h3 id="iosTitle">Instalar no iPhone / iPad</h3>
+    <p>O Safari não permite instalação automática. Faça manualmente em 3 passos:</p>
+    <ol>
+      <li>Toque no botão <strong>Compartilhar</strong>
+        <svg class="ios-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+        (barra inferior do Safari).</li>
+      <li>Role a lista e toque em <strong>Adicionar à Tela de Início</strong>.</li>
+      <li>Toque em <strong>Adicionar</strong> no canto superior.</li>
+    </ol>
+    <p>Depois disso o ícone do <em>Caderno Herpetológico</em> aparece na sua tela inicial, com funcionamento offline.</p>
+    <button type="button" id="closeModal">Entendi</button>
+  </div>
+</div>
+
+<!-- Modal de instruções genérico (Android / Desktop) -->
+<div class="modal" id="installModal" hidden role="dialog" aria-modal="true" aria-labelledby="installModalTitle">
+  <div class="modal-c">
+    <h3 id="installModalTitle">Instalar aplicativo</h3>
+    <p>Para instalar o <em>Caderno Herpetológico</em>:</p>
+    <ol>
+      <li>Abra o menu do navegador (o ícone <strong>⋮</strong> ou <strong>≡</strong>).</li>
+      <li>Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+      <li>Confirme em <strong>Instalar</strong> ou <strong>Adicionar</strong>.</li>
+    </ol>
+    <p>O ícone do <em>Caderno Herpetológico</em> aparecerá na sua tela inicial, com funcionamento offline.</p>
+    <button type="button" id="closeInstallModal">Entendi</button>
+  </div>
+</div>
+
+<script>
+(function(){
+var KEY="caderno-campo-v1",LKEY="caderno-ultimo-v1",recs=[],editing=null,acc="",last={};
+var $=function(i){return document.getElementById(i)};
+var F=["num","esp","sexo","uf","mun","loc","dat","hor","lat","lon","mas","svl","tl","tempEsp","tempSub","tempAr","umid","tec","col","obs"];
+var CH=["Nº de campo","Sexo","Espécie","Estado","Município","Local","Data","Horário","Latitude","Longitude","Massa (g)","SVL (mm)","TL (mm)","Temp. do Espécime (°C)","Temp. do Substrato (°C)","Temp. do Ar (°C)","Umidade do Ar (%)","Tipo de tecido","Coletores","Observações"];
+function load(){try{var r=localStorage.getItem(KEY);recs=r?JSON.parse(r):[]}catch(e){recs=[]}if(!Array.isArray(recs))recs=[]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(recs))}catch(e){$("msg").textContent="Não foi possível salvar no aparelho. Exporte o CSV logo."}}
+function loadLast(){try{var s=localStorage.getItem(LKEY);last=s?JSON.parse(s):{}}catch(e){last={}}if(!last||typeof last!=="object"||Array.isArray(last))last={}}
+function saveLast(){try{localStorage.setItem(LKEY,JSON.stringify(last))}catch(e){}}
+function p2(n){return String(n).padStart(2,"0")}
+function now(){var d=new Date();$("dat").value=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());$("hor").value=p2(d.getHours())+":"+p2(d.getMinutes())}
+function nextNum(){var last=recs.length?String(recs[recs.length-1].num):"";var m=last.match(/^(.*?)(\d+)$/);return m?m[1]+String(+m[2]+1).padStart(m[2].length,"0"):""}
+function gps(){
+ var g=$("gps");
+ if(!navigator.geolocation){g.textContent="Localização indisponível. Digite as coordenadas.";return}
+ g.textContent="Buscando localização…";
+ navigator.geolocation.getCurrentPosition(function(p){
+  $("lat").value=p.coords.latitude.toFixed(6);$("lon").value=p.coords.longitude.toFixed(6);
+  acc=Math.round(p.coords.accuracy);g.textContent="Localização capturada (precisão ~"+acc+" m).";
+ },function(){acc="";g.textContent="Sem acesso à localização. Digite as coordenadas ou permita o acesso ao GPS."},
+ {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+function fresh(){
+ ["num","esp","sexo","mas","svl","tl","tempEsp","tempSub","tempAr","umid","tec","obs"].forEach(function(k){$(k).value=""});
+ $("uf").value=last.uf||"";$("mun").value=last.mun||"";
+ $("loc").value=last.loc||"";$("col").value=last.col||"";
+ $("num").value=nextNum();now();gps();editing=null;$("sv").textContent="Salvar espécime";
+}
+function esc(v){v=String(v==null?"":v);return /[",\n\r;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function uid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID()}catch(e){}return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)})}
+function row(r){
+ return [r.num||"",r.sexo||"",r.esp||"",r.uf||"",r.mun||"",r.loc||"",r.dat||"",r.hor||"",r.lat||"",r.lon||"",r.mas||"",r.svl||"",r.tl||"",r.tempEsp||"",r.tempSub||"",r.tempAr||"",r.umid||"",r.tec||"",r.col||"",r.obs||""];
+}
+function csv(){
+ var rows=[CH.join(",")];
+ recs.forEach(function(r){rows.push(row(r).map(esc).join(","))});
+ return rows.join("\r\n");
+}
+function render(){
+ $("cnt").textContent="Registros ("+recs.length+")";
+ var box=$("items");box.textContent="";
+ if(!recs.length){var e=document.createElement("p");e.className="empty";e.textContent="Nenhum espécime salvo ainda.";box.appendChild(e);return}
+ recs.slice().reverse().forEach(function(r,ri){
+  var i=recs.length-1-ri,d=document.createElement("div");d.className="it";
+  var t=document.createElement("div"),b=document.createElement("b"),s=document.createElement("span");
+  b.textContent=r.num+" · "+(r.esp||"sem espécie");
+  s.textContent=[r.sexo,r.mun,r.uf,r.loc,r.dat,r.hor].filter(Boolean).join(" · ");
+  t.appendChild(b);t.appendChild(s);
+  var bt=document.createElement("div");bt.className="b";
+  var ed=document.createElement("button");ed.type="button";ed.className="s";ed.textContent="Editar";
+  ed.onclick=function(){edit(i)};
+  var de=document.createElement("button");de.type="button";de.className="d";de.textContent="Apagar";
+  de.onclick=function(){if(confirm("Apagar o espécime "+r.num+"?")){recs.splice(i,1);save();render()}};
+  bt.appendChild(ed);bt.appendChild(de);d.appendChild(t);d.appendChild(bt);box.appendChild(d);
+ });
+}
+function edit(i){
+ var r=recs[i];editing=i;
+ F.forEach(function(k){$(k).value=r[k]==null?"":r[k]});acc=r.prec||"";
+ var st=$("tec");if(r.tec&&st.value!==r.tec){var op=document.createElement("option");op.textContent=r.tec;st.appendChild(op);st.value=r.tec}
+ if(r.sexo==="M")$("sexo").value="Macho";if(r.sexo==="F")$("sexo").value="Fêmea";
+ $("sv").textContent="Atualizar espécime";$("gps").textContent="Editando "+r.num+".";
+ ufSync();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("f").addEventListener("submit",function(ev){
+ ev.preventDefault();
+ var r={};F.forEach(function(k){r[k]=$(k).value.trim()});r.id=editing!==null&&recs[editing].id?recs[editing].id:uid();
+ if(editing!==null){recs[editing]=r}else{recs.push(r)}addSp(r.esp);
+ save();render();
+ last={uf:r.uf,mun:r.mun,loc:r.loc,col:r.col};saveLast();
+ fresh();
+ $("msg").textContent="Espécime "+r.num+" salvo.";
+});
+$("relo").onclick=gps;
+$("exp").onclick=function(){
+ var out=$("out");
+ if(!recs.length){$("msg").textContent="Salve ao menos um espécime antes de exportar.";return}
+ var data=csv(),d=new Date(),name="campo_"+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+".csv";
+ function fallback(){out.hidden=false;out.value=data;out.select();$("msg").textContent="Não foi possível baixar. Copie o texto abaixo e cole em um arquivo .csv."}
+ try{var bl=new Blob([data],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(bl),an=document.createElement("a");an.href=u;an.download=name;document.body.appendChild(an);an.click();an.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);$("msg").textContent="CSV exportado para a pasta Downloads."}catch(e){fallback()}
+};
+var SPK="campo-especies-v1",BASE="Acanthochelys macrocephala|Acanthochelys radiolata|Acanthochelys spixii|Acratosaura mentalis|Acratosaura spinosa|Adelastes hylonomos|Adelophryne adiastola|Adelophryne amapaensis|Adelophryne baturitensis|Adelophryne glandulata|Adelophryne maranguapensis|Adelophryne meridionalis|Adelophryne michelin|Adelophryne mucronata|Adelophryne nordestina|Adelophryne pachydactyla|Adelphobates castaneoticus|Adelphobates galactonotus|Adelphobates quinquevittatus|Adelphostigma occipitalis|Adelphostigma quadriocellata|Adenomera ajurauna|Adenomera albarena|Adenomera amicorum|Adenomera andreae|Adenomera araucaria|Adenomera aurantiaca|Adenomera bokermanni|Adenomera cantitata|Adenomera chicomendesi|Adenomera cotuba|Adenomera diptyx|Adenomera engelsi|Adenomera glauciae|Adenomera gridipappi|Adenomera guarani|Adenomera heyeri|Adenomera hylaedactyla|Adenomera inopinata|Adenomera juikitam|Adenomera kayapo|Adenomera kweti|Adenomera marmorata|Adenomera martinezi|Adenomera nana|Adenomera phonotriccus|Adenomera saci|Adenomera simonstuarti|Adenomera tapajonica|Adenomera thomei|Adhaerobufo ceratophrys|Alainia albolineata|Alainia ernestoi|Alainia fulvorufa|Alainia microdiscus|Alexandresaurus camacan|Allobates albiventris|Allobates bacurau|Allobates brunneus|Allobates caeruleodactylus|Allobates caldwellae|Allobates carajas|Allobates conspicuus|Allobates crombiei|Allobates femoralis|Allobates flaviventris|Allobates fuscellus|Allobates gasconi|Allobates goianus|Allobates grillicantus|Allobates grillisimilis|Allobates hodli|Allobates juami|Allobates kamilae|Allobates magnussoni|Allobates marchesianus|Allobates masniger|Allobates myersi|Allobates nidicola|Allobates nunciatus|Allobates pacaas|Allobates paleci|Allobates paleovarzensis|Allobates ripicolus|Allobates subfolionidificans|Allobates sumtuosus|Allobates tapajos|Allobates tinae|Allobates trilineatus|Allobates vanzolinius|Allobates velocicantus|Allophryne resplendens|Allophryne ruthveni|Alopoglossus amazonius|Alopoglossus angulatus|Alopoglossus atriventris|Alopoglossus avilapiresae|Alopoglossus brevifrontalis|Alopoglossus buckleyi|Alopoglossus collii|Alopoglossus gansorum|Alopoglossus indigenorum|Alopoglossus meloi|Alopoglossus tapajosensis|Alopoglossus theodorusi|Amapasaurus tetradactylus|Amazophrynella bilinguis|Amazophrynella bokermanni|Amazophrynella gardai|Amazophrynella manaos|Amazophrynella minuta|Amazophrynella moisesii|Amazophrynella siona|Amazophrynella teko|Amazophrynella vote|Amazophrynella xinguensis|Ameerega berohoka|Ameerega braccata|Ameerega flavopicta|Ameerega hahneli|Ameerega macero|Ameerega munduruku|Ameerega petersi|Ameerega picta|Ameerega pulchripecta|Ameerega trivittata|Ameiva ameiva|Ameiva jacuba|Ameiva parecis|Ameivula cipoensis|Ameivula confusioniba|Ameivula jalapensis|Ameivula mumbuca|Ameivula nativo|Ameivula nigrigula|Ameivula ocellifera|Ameivula pyrrhogularis|Ameivula xacriaba|Amerotyphlops amoipira|Amerotyphlops arenensis|Amerotyphlops brongersmianus|Amerotyphlops minuisquamus|Amerotyphlops paucisquamus|Amerotyphlops reticulatus|Amerotyphlops yonenagae|Amnesteophis melanauchen|Amnisiophis amoenus|Amphisbaena absaberi|Amphisbaena acangaoba|Amphisbaena acrobeles|Amphisbaena alba|Amphisbaena anaemariae|Amphisbaena anomala|Amphisbaena arda|Amphisbaena arenaria|Amphisbaena arenicola|Amphisbaena bahiana|Amphisbaena bedai|Amphisbaena bilabialata|Amphisbaena brasiliana|Amphisbaena brevis|Amphisbaena caetitensis|Amphisbaena caiari|Amphisbaena camura|Amphisbaena carli|Amphisbaena carvalhoi|Amphisbaena crisae|Amphisbaena cuiabana|Amphisbaena cunhai|Amphisbaena darwinii|Amphisbaena dubia|Amphisbaena filiformis|Amphisbaena frontalis|Amphisbaena fuliginosa|Amphisbaena hastata|Amphisbaena heathi|Amphisbaena hiata|Amphisbaena hogei|Amphisbaena hoogmoedi|Amphisbaena ignatiana|Amphisbaena kingii|Amphisbaena kiriri|Amphisbaena kraoh|Amphisbaena leeseri|Amphisbaena leucocephala|Amphisbaena littoralis|Amphisbaena longinqua|Amphisbaena lumbricalis|Amphisbaena maranhensis|Amphisbaena mebengokre|Amphisbaena mertensii|Amphisbaena metallurga|Amphisbaena miringoera|Amphisbaena mitchelli|Amphisbaena mongoyo|Amphisbaena munoai|Amphisbaena nana|Amphisbaena neglecta|Amphisbaena nigricauda|Amphisbaena persephone|Amphisbaena pretrei|Amphisbaena prunicolor|Amphisbaena ridleyi|Amphisbaena roberti|Amphisbaena sanctaeritae|Amphisbaena saxosa|Amphisbaena silvestrii|Amphisbaena slevini|Amphisbaena steindachneri|Amphisbaena supernumeraria|Amphisbaena talisiae|Amphisbaena tiaraju|Amphisbaena trachura|Amphisbaena tragorrhectes|Amphisbaena uroxena|Amphisbaena vanzolinii|Amphisbaena vermicularis|Anilius scytale|Anisolepis grilli|Anisolepis longicauda|Anisolepis undulatus|Anomaloglossus apiau|Anomaloglossus baeobatrachus|Anomaloglossus stepheni|Anomaloglossus tamacuarensis|Anomaloglossus tepequem|Anotosaura collaris|Anotosaura vanzolinia|Aplastodiscus albofrenatus|Aplastodiscus albosignatus|Aplastodiscus arildae|Aplastodiscus aulophonus|Aplastodiscus cavicola|Aplastodiscus cochranae|Aplastodiscus ehrhardti|Aplastodiscus eugenioi|Aplastodiscus flumineus|Aplastodiscus heterophonicus|Aplastodiscus ibirapitanga|Aplastodiscus leucopygius|Aplastodiscus lutzorum|Aplastodiscus musicus|Aplastodiscus perviridis|Aplastodiscus sibilatus|Aplastodiscus weygoldti|Apostolepis adhara|Apostolepis albicollaris|Apostolepis arenaria|Apostolepis assimilis|Apostolepis borellii|Apostolepis cearensis|Apostolepis christineae|Apostolepis dimidiata|Apostolepis flavotorquata|Apostolepis gaboi|Apostolepis goiasensis|Apostolepis intermedia|Apostolepis kikoi|Apostolepis lineata|Apostolepis longicaudata|Apostolepis nelsonjorgei|Apostolepis nigrolineata|Apostolepis nigroterminata|Apostolepis phillipsi|Apostolepis polylepis|Apostolepis quinquelineata|Apostolepis quirogai|Apostolepis rondoni|Apostolepis sanctaeritae|Apostolepis serrana|Apostolepis striata|Apostolepis tenuis|Apostolepis thalesdelemai|Apostolepis vittata|Aquarana catesbeiana|Arcovomer passarellii|Arthrosaura kockii|Arthrosaura reticulata|Arthrosaura versteegii|Aspronema dorsivittatum|Atelopus flavescens|Atelopus franciscus|Atelopus hoogmoedi|Atelopus manauensis|Atractus aboiporu|Atractus akerios|Atractus albuquerquei|Atractus alphonsehogei|Atractus altagratiae|Atractus badius|Atractus boimirim|Atractus caete|Atractus caxiuana|Atractus collaris|Atractus dapsilis|Atractus edioi|Atractus elaps|Atractus emmeli|Atractus flammigerus|Atractus francoi|Atractus guentheri|Atractus hoogmoedi|Atractus insipidus|Atractus latifrons|Atractus maculatus|Atractus major|Atractus natans|Atractus nawa|Atractus pantostictus|Atractus paraguayensis|Atractus poeppigi|Atractus potschi|Atractus reticulatus|Atractus riveroi|Atractus ronnie|Atractus serranus|Atractus snethlageae|Atractus spinalis|Atractus stygius|Atractus surucucu|Atractus tartarus|Atractus thalesdelemai|Atractus torquatus|Atractus trefauti|Atractus trihedrurus|Atractus trilineatus|Atractus zebrinus|Atractus zidoki|Atretochoana eiselti|Bachia bresslaui|Bachia cacerensis|Bachia didactyla|Bachia dorbignyi|Bachia flavescens|Bachia geralista|Bachia micromela|Bachia oxyrhina|Bachia panoplia|Bachia peruana|Bachia psamophila|Bachia pyburni|Bachia remota|Bachia scaea|Bachia scolecoides|Bachia trisanale|Bahius bilineatus|Baliodryas steinbachi|Barycholos ternetzi|Boa constrictor|Boana albomarginata|Boana albopunctata|Boana appendiculata|Boana atlantica|Boana bischoffi|Boana boans|Boana botumirim|Boana buriti|Boana caiapo|Boana caingua|Boana caipora|Boana calcarata|Boana cambui|Boana cinerascens|Boana cipoensis|Boana claresignata|Boana clepsydra|Boana courtoisae|Boana crepitans|Boana curupi|Boana cymbalum|Boana dentei|Boana diabolica|Boana ericae|Boana eucharis|Boana exastis|Boana faber|Boana freicanecae|Boana geographica|Boana goiana|Boana gracilis|Boana guarinimirim|Boana guentheri|Boana hobbsi|Boana icamiaba|Boana itajahy|Boana jaguariaivensis|Boana joaquini|Boana lanciformis|Boana leptolineata|Boana leucocheila|Boana lundii|Boana maculateralis|Boana marginata|Boana microderma|Boana multifasciata|Boana nympha|Boana ornatissima|Boana paranaiba|Boana pardalis|Boana poaju|Boana polytaenia|Boana pombali|Boana prasina|Boana pulchella|Boana punctata|Boana quiriri|Boana raniceps|Boana secedens|Boana semiguttata|Boana semilineata|Boana steinbachi|Boana stellae|Boana stenocephala|Boana tepuiana|Boana ventrimaculata|Boana wavrini|Boana xerophylla|Boiruna maculata|Boiruna sertaneja|Bokermannohyla ahenea|Bokermannohyla alvarengai|Bokermannohyla astartea|Bokermannohyla capra|Bokermannohyla caramaschii|Bokermannohyla carvalhoi|Bokermannohyla circumdata|Bokermannohyla diamantina|Bokermannohyla feioi|Bokermannohyla flavopicta|Bokermannohyla gouveai|Bokermannohyla hylax|Bokermannohyla ibitiguara|Bokermannohyla ibitipoca|Bokermannohyla itapoty|Bokermannohyla izecksohni|Bokermannohyla juiju|Bokermannohyla langei|Bokermannohyla lucianae|Bokermannohyla luctuosa|Bokermannohyla martinsi|Bokermannohyla nanuzae|Bokermannohyla oxente|Bokermannohyla pseudopseudis|Bokermannohyla ravida|Bokermannohyla sagarana|Bokermannohyla sapiranga|Bokermannohyla saxicola|Bokermannohyla sazimai|Bokermannohyla vulcaniae|Bolitoglossa altamazonica|Bolitoglossa caldwellae|Bolitoglossa madeira|Bolitoglossa paraensis|Bolitoglossa tapajonica|Bothrocophias hyoprora|Bothrocophias microphthalmus|Bothrops alcatraz|Bothrops alternatus|Bothrops atrox|Bothrops bilineatus|Bothrops brazili|Bothrops cotiara|Bothrops diporus|Bothrops erythromelas|Bothrops fonsecai|Bothrops germanoi|Bothrops insularis|Bothrops itapetiningae|Bothrops jabrensis|Bothrops jararaca|Bothrops jararacussu|Bothrops leucurus|Bothrops lutzi|Bothrops marajoensis|Bothrops marmoratus|Bothrops mattogrossensis|Bothrops moojeni|Bothrops muriciensis|Bothrops neuwiedi|Bothrops oligobalius|Bothrops otavioi|Bothrops pauloensis|Bothrops pirajai|Bothrops pubescens|Bothrops sazimai|Bothrops taeniatus|Brachycephalus actaeus|Brachycephalus albolineatus|Brachycephalus alipioi|Brachycephalus auroguttatus|Brachycephalus boticario|Brachycephalus brunneus|Brachycephalus bufonoides|Brachycephalus clarissae|Brachycephalus coloratus|Brachycephalus crispus|Brachycephalus curupira|Brachycephalus dacnis|Brachycephalus darkside|Brachycephalus didactylus|Brachycephalus ephippium|Brachycephalus ferruginus|Brachycephalus fuscolineatus|Brachycephalus garbeanus|Brachycephalus guarani|Brachycephalus herculeus|Brachycephalus hermogenesi|Brachycephalus ibitinga|Brachycephalus izecksohni|Brachycephalus leopardus|Brachycephalus lulai|Brachycephalus margaritatus|Brachycephalus mariaeterezae|Brachycephalus mirissimus|Brachycephalus nanicus|Brachycephalus nodoterga|Brachycephalus olivaceus|Brachycephalus pernix|Brachycephalus pitanga|Brachycephalus pombali|Brachycephalus pulex|Brachycephalus puri|Brachycephalus quiririensis|Brachycephalus rotenbergae|Brachycephalus sulfuratus|Brachycephalus tabuleiro|Brachycephalus toby|Brachycephalus tridactylus|Brachycephalus verrucosus|Brachycephalus vertebralis|Brasiliscincus agilis|Brasiliscincus caissara|Brasiliscincus heathi|Brasilotyphlus braziliensis|Brasilotyphlus dubium|Brasilotyphlus guarantanus|Caaeteboia amarali|Caaeteboia gaeli|Caecilia armata|Caecilia gracilis|Caecilia marcusi|Caecilia tentaculata|Caiman crocodilus|Caiman latirostris|Caiman yacare|Calamodontophis paucidens|Calamodontophis ronaldoi|Caligophryne doylei|Callimedusa atelopoides|Callimedusa tomopterna|Calyptommatus confusionibus|Calyptommatus frontalis|Calyptommatus leiolepis|Calyptommatus nicterus|Calyptommatus sinebrachiatus|Caparaonia itaiquara|Caretta caretta|Ceratophrys aurita|Ceratophrys cornuta|Ceratophrys cranwelli|Ceratophrys joazeirensis|Ceratophrys ornata|Cercophis auratus|Cercosaura anordosquama|Cercosaura argulus|Cercosaura bassleri|Cercosaura eigenmanni|Cercosaura ocellata|Cercosaura olivacea|Cercosaura oshaughnessyi|Cercosaura parkeri|Cercosaura quadrilineata|Cercosaura schreibersii|Ceuthomantis cavernibardus|Chatogekko amazonicus|Chelonia mydas|Chelonoidis carbonarius|Chelonoidis denticulatus|Chelus fimbriata|Chelus orinocensis|Chiasmocleis alagoana|Chiasmocleis albopunctata|Chiasmocleis altomontana|Chiasmocleis antenori|Chiasmocleis atlantica|Chiasmocleis avilapiresae|Chiasmocleis bassleri|Chiasmocleis bicegoi|Chiasmocleis capixaba|Chiasmocleis centralis|Chiasmocleis cordeiroi|Chiasmocleis crucis|Chiasmocleis gnoma|Chiasmocleis hudsoni|Chiasmocleis jacki|Chiasmocleis lacrimae|Chiasmocleis leucosticta|Chiasmocleis mantiqueira|Chiasmocleis mehelyi|Chiasmocleis migueli|Chiasmocleis papachibe|Chiasmocleis quilombola|Chiasmocleis royi|Chiasmocleis sapiranga|Chiasmocleis schubarti|Chiasmocleis shudikarensis|Chiasmocleis supercilialba|Chiasmocleis tridactyla|Chiasmocleis ventrimaculata|Chiasmocleis veracruz|Chironius bicarinatus|Chironius brazili|Chironius carinatus|Chironius diamantina|Chironius dixoni|Chironius exoletus|Chironius flavolineatus|Chironius foveatus|Chironius fuscus|Chironius gouveai|Chironius laevicollis|Chironius maculoventris|Chironius multiventris|Chironius quadricarinatus|Chironius scurrulus|Chironius septentrionalis|Chlorosoma dunupyana|Chlorosoma laticeps|Chlorosoma viridissimum|Chthonerpeton arii|Chthonerpeton braestrupi|Chthonerpeton exile|Chthonerpeton indistinctum|Chthonerpeton markwilkinsoni|Chthonerpeton noctinectes|Chthonerpeton perissodus|Chthonerpeton tremembe|Chthonerpeton viviparum|Clelia clelia|Clelia hussami|Clelia plumbea|Cnemidophorus cryptus|Cnemidophorus gramivagus|Cnemidophorus lemniscatus|Cochranella resplendens|Coleodactylus brachystoma|Coleodactylus elizae|Coleodactylus meridionalis|Coleodactylus natalensis|Coleodactylus septentrionalis|Colobodactylus dalcyanus|Colobodactylus taunayi|Colobosaura modesta|Colobosauroides carvalhoi|Colobosauroides cearensis|Contomastix lacertoides|Contomastix vacariensis|Copeoglossum arajara|Copeoglossum nigropunctatum|Corallus batesii|Corallus caninus|Corallus cropanii|Corallus hortulana|Coronelaps lepidus|Corythomantis botoque|Corythomantis greeningi|Crocodilurus amazonicus|Crossodactylodes alairi|Crossodactylodes bokermanni|Crossodactylodes itambe|Crossodactylodes izecksohni|Crossodactylodes pintoi|Crossodactylodes septentrionalis|Crossodactylodes serranegra|Crossodactylodes teixeirai|Crossodactylus boulengeri|Crossodactylus caramaschii|Crossodactylus cyclospinus|Crossodactylus dantei|Crossodactylus dispar|Crossodactylus franciscanus|Crossodactylus gaudichaudii|Crossodactylus grandis|Crossodactylus lutzorum|Crossodactylus schmidti|Crossodactylus timbuhy|Crossodactylus trachystomus|Crossodactylus werneri|Crotalus durissus|Cruziohyla craspedopus|Ctenophryne geayi|Cycloramphus acangatan|Cycloramphus asper|Cycloramphus bandeirensis|Cycloramphus bolitoglossus|Cycloramphus boraceiensis|Cycloramphus brasiliensis|Cycloramphus carvalhoi|Cycloramphus catarinensis|Cycloramphus cedrensis|Cycloramphus diringshofeni|Cycloramphus dubius|Cycloramphus duseni|Cycloramphus eleutherodactylus|Cycloramphus faustoi|Cycloramphus fuliginosus|Cycloramphus granulosus|Cycloramphus heyeri|Cycloramphus izecksohni|Cycloramphus juimirim|Cycloramphus lithomimeticus|Cycloramphus lutzorum|Cycloramphus migueli|Cycloramphus mirandaribeiroi|Cycloramphus ohausi|Cycloramphus organensis|Cycloramphus parvulus|Cycloramphus rhyakonastes|Cycloramphus semipalmatus|Cycloramphus stejnegeri|Cycloramphus valae|Dactyloa dissimilis|Dactyloa nasofrontalis|Dactyloa neglecta|Dactyloa phyllorhina|Dactyloa pseudotigrina|Dactyloa punctata|Dactyloa transversalis|Dasypops schirchi|Dendrobates leucomelas|Dendrobates tinctorius|Dendrophidion atlantica|Dendrophidion dendrophis|Dendrophryniscus berthalutzae|Dendrophryniscus brevipollicatus|Dendrophryniscus carvalhoi|Dendrophryniscus cuca|Dendrophryniscus davori|Dendrophryniscus haddadi|Dendrophryniscus imitator|Dendrophryniscus izecksohni|Dendrophryniscus jureia|Dendrophryniscus krausae|Dendrophryniscus lauroi|Dendrophryniscus leucomystax|Dendrophryniscus oreites|Dendrophryniscus organensis|Dendrophryniscus proboscideus|Dendrophryniscus skuki|Dendrophryniscus stawiarskyi|Dendropsophus acreanus|Dendropsophus anataliasiasi|Dendropsophus anceps|Dendropsophus araguaya|Dendropsophus arndti|Dendropsophus berthalutzae|Dendropsophus bilobatus|Dendropsophus bipunctatus|Dendropsophus bokermanni|Dendropsophus branneri|Dendropsophus brevifrons|Dendropsophus bromeliaceus|Dendropsophus cachimbo|Dendropsophus cerradensis|Dendropsophus counani|Dendropsophus cruzi|Dendropsophus decipiens|Dendropsophus dutrai|Dendropsophus elegans|Dendropsophus elianeae|Dendropsophus frosti|Dendropsophus gaucheri|Dendropsophus giesleri|Dendropsophus goughi|Dendropsophus haddadi|Dendropsophus haraldschultzi|Dendropsophus joannae|Dendropsophus kamagarini|Dendropsophus leali|Dendropsophus leucophyllatus|Dendropsophus limai|Dendropsophus mapinguari|Dendropsophus marmoratus|Dendropsophus melanargyreus|Dendropsophus meridianus|Dendropsophus microcephalus|Dendropsophus microps|Dendropsophus minimus|Dendropsophus minusculus|Dendropsophus minutus|Dendropsophus miyatai|Dendropsophus nahdereri|Dendropsophus nanus|Dendropsophus nekronastes|Dendropsophus novaisi|Dendropsophus oliveirai|Dendropsophus ozzyi|Dendropsophus parviceps|Dendropsophus pauiniensis|Dendropsophus pseudomeridianus|Dendropsophus reichlei|Dendropsophus reticulatus|Dendropsophus rhodopeplus|Dendropsophus riveroi|Dendropsophus rossalleni|Dendropsophus rubicundulus|Dendropsophus ruschii|Dendropsophus salli|Dendropsophus sanborni|Dendropsophus sarayacuensis|Dendropsophus schubarti|Dendropsophus seniculus|Dendropsophus shiwiarum|Dendropsophus soaresi|Dendropsophus studerae|Dendropsophus tapacurensis|Dendropsophus timbeba|Dendropsophus tintinnabulum|Dendropsophus triangulum|Dendropsophus tritaeniatus|Dendropsophus walfordi|Dendropsophus werneri|Dendropsophus xapuriensis|Dermatonotus muelleri|Dermochelys coriacea|Dibernardia affinis|Dibernardia bilineatus|Dibernardia persimilis|Dibernardia poecilopogon|Diploglossus fasciatus|Diploglossus lessonae|Dipsas albifrons|Dipsas alternans|Dipsas bothropoides|Dipsas bucephala|Dipsas catesbyi|Dipsas copei|Dipsas indica|Dipsas lavillai|Dipsas mikanii|Dipsas neuwiedi|Dipsas pavonina|Dipsas sazimai|Dipsas turgida|Dipsas variegata|Dipsas ventrimaculata|Ditaxodon taeniatus|Dracaena guianensis|Dracaena paraguayensis|Drepanoides anomalus|Dryaderces inframaculata|Dryadobates alagoanus|Dryadobates bokermanni|Dryadobates capixaba|Dryadobates carioca|Dryadobates erythropus|Dryadobates lutzi|Dryadobates olfersioides|Dryadosaura nordestina|Drymarchon corais|Drymobius rhombifer|Drymoluber brazili|Drymoluber dichrous|Dryophylax almae|Dryophylax chaquensis|Dryophylax hypoconia|Dryophylax nattereri|Dryophylax phoenix|Dryophylax ramonriveroi|Echinanthera cephalomaculata|Echinanthera cephalostriata|Echinanthera cyanopleura|Echinanthera melanostigma|Echinanthera undulata|Ecpleopus gaudichaudii|Edalorhina perezi|Elachistocleis bicolor|Elachistocleis cesarii|Elachistocleis corumbaensis|Elachistocleis erythrogaster|Elachistocleis helianneae|Elachistocleis magna|Elachistocleis muiraquitan|Elachistocleis piauiensis|Elachistocleis surinamensis|Elapomorphus quinquelineatus|Elapomorphus wuchereri|Eleutherodactylus johnstonei|Engystomops freibergi|Engystomops petersi|Enyalioides laticeps|Enyalioides palpebralis|Enyalius bibronii|Enyalius bilineatus|Enyalius boulengeri|Enyalius brasiliensis|Enyalius capetinga|Enyalius catenatus|Enyalius erythroceneus|Enyalius iheringii|Enyalius leechii|Enyalius perditus|Enyalius pictus|Eotheca fissipes|Eotheca flamma|Eotheca megacephala|Eotheca prasina|Eotheca pulchra|Eotheca recava|Epicrates assisi|Epicrates cenchria|Epicrates crassus|Epicrates maurus|Epictia albifrons|Epictia australis|Epictia borapeliotes|Epictia clinorostris|Epictia munoai|Epictia striatula|Epictia vellardi|Eretmochelys imbricata|Erythrolamprus aenigma|Erythrolamprus aesculapii|Erythrolamprus almadensis|Erythrolamprus atraventer|Erythrolamprus breviceps|Erythrolamprus carajasensis|Erythrolamprus cobella|Erythrolamprus dorsocorallinus|Erythrolamprus frenatus|Erythrolamprus jaegeri|Erythrolamprus macrosoma|Erythrolamprus maryellenae|Erythrolamprus miliaris|Erythrolamprus mossoroensis|Erythrolamprus oligolepis|Erythrolamprus poecilogyrus|Erythrolamprus pygmaeus|Erythrolamprus reginae|Erythrolamprus rochai|Erythrolamprus semiaureus|Erythrolamprus taeniogaster|Erythrolamprus trebbaui|Erythrolamprus typhlus|Erythrolamprus viridis|Eunectes deschauenseei|Eunectes murinus|Eunectes notaeus|Euparkerella brasiliensis|Euparkerella cochranae|Euparkerella cryptica|Euparkerella robusta|Euparkerella tridactyla|Eurolophosaurus amathites|Eurolophosaurus divaricatus|Eurolophosaurus nanuzae|Eutrachelophis papilio|Exila nigropalmata|Fritziana fissilis|Fritziana goeldii|Fritziana izecksohni|Fritziana mitus|Fritziana ohausi|Fritziana tonimi|Fritziana ulei|Frostius erythrophthalmus|Frostius pernambucensis|Gabohyla pauloalvini|Glaucomastix abaetensis|Glaucomastix cyanura|Glaucomastix itabaianensis|Glaucomastix littoralis|Glaucomastix venetacauda|Gomesophis brasiliensis|Gonatodes annularis|Gonatodes eladioi|Gonatodes hasemani|Gonatodes humeralis|Gonatodes nascimentoi|Gonatodes tapajonicus|Gymnodactylus amarali|Gymnodactylus darwinii|Gymnodactylus geckoides|Gymnodactylus guttulatus|Gymnodactylus vanzolinii|Gymnophthalmus leucomystax|Gymnophthalmus underwoodi|Gymnophthalmus vanzoi|Habrophallos collaris|Haddadus aramunha|Haddadus binotatus|Haddadus plicifer|Hamptophryne alios|Hamptophryne boliviana|Helicops acangussu|Helicops angulatus|Helicops apiaka|Helicops boitata|Helicops carinicaudus|Helicops gomesi|Helicops hagmanni|Helicops infrataeniatus|Helicops leopardinus|Helicops modestus|Helicops nentur|Helicops phantasma|Helicops polylepis|Helicops tapajonicus|Helicops trivittatus|Helicops yacu|Hemidactylus agrius|Hemidactylus brasilianus|Hemidactylus mabouia|Hemidactylus palaichthus|Hemiphractus helioi|Hemiphractus scutatus|Heterodactylus imbricatus|Heterodactylus lundii|Heterodactylus septentrionalis|Holoaden bradei|Holoaden luederwaldti|Holoaden pholeter|Holoaden suarezi|Homonota uruguayensis|Hoplocercus spinosus|Hyalinobatrachium cappellei|Hyalinobatrachium carlesvilai|Hyalinobatrachium iaspidiense|Hyalinobatrachium mondolfii|Hyalinobatrachium muiraquitan|Hyalinobatrachium munozorum|Hyalinobatrachium taylori|Hyalinobatrachium tricolor|Hydrodynastes bicinctus|Hydrodynastes gigas|Hydrolaetare caparu|Hydrolaetare dantasi|Hydrolaetare schmidti|Hydromedusa maximiliani|Hydromedusa tectifera|Hydrops caesurus|Hydrops martii|Hydrops triangularis|Hyla imitator|Hylodes amnicola|Hylodes asper|Hylodes babax|Hylodes caete|Hylodes cardosoi|Hylodes charadranaetes|Hylodes dactylocinus|Hylodes fredi|Hylodes glaber|Hylodes heyeri|Hylodes japi|Hylodes lateristrigatus|Hylodes magalhaesi|Hylodes meridionalis|Hylodes mertensi|Hylodes nasus|Hylodes ornatus|Hylodes otavioi|Hylodes perere|Hylodes perplicatus|Hylodes phyllodes|Hylodes pipilans|Hylodes regius|Hylodes sazimai|Hylodes uai|Hylodes vanzolinii|Hylomantis aspera|Hylomantis granulosa|Hyloxalus chlorocraspedus|Iguana iguana|Imantodes cenchoa|Imantodes lentiferus|Iphisa elegans|Ischnocnema abdita|Ischnocnema bocaina|Ischnocnema bolbodactyla|Ischnocnema colibri|Ischnocnema concolor|Ischnocnema crassa|Ischnocnema epipeda|Ischnocnema erythromera|Ischnocnema feioi|Ischnocnema garciai|Ischnocnema gehrti|Ischnocnema gualteri|Ischnocnema guentheri|Ischnocnema henselii|Ischnocnema hoehnei|Ischnocnema holti|Ischnocnema izecksohni|Ischnocnema juipoca|Ischnocnema karst|Ischnocnema lactea|Ischnocnema manezinho|Ischnocnema melanopygia|Ischnocnema nanahallux|Ischnocnema nasuta|Ischnocnema nigriventris|Ischnocnema octavioi|Ischnocnema oea|Ischnocnema paranaensis|Ischnocnema parnaso|Ischnocnema parva|Ischnocnema penaxavantinho|Ischnocnema pusilla|Ischnocnema randorum|Ischnocnema rubridactyla|Ischnocnema sambaqui|Ischnocnema spanios|Ischnocnema surda|Ischnocnema venancioi|Ischnocnema verrucosa|Ischnocnema vizottoi|Itapotihyla langsdorffii|Julianus camposseabrai|Julianus fontanarrosai|Julianus pinimus|Julianus uruguayus|Kentropyx altamazonica|Kentropyx calcarata|Kentropyx paulensis|Kentropyx pelviceps|Kentropyx striata|Kentropyx vanzoi|Kentropyx viridistriga|Kinosternon scorpioides|Lachesis muta|Lepidobatrachus laevis|Lepidoblepharis heyerorum|Lepidoblepharis hoogmoedi|Lepidochelys olivacea|Leposoma annectans|Leposoma baturitensis|Leposoma nanodactylus|Leposoma puk|Leposoma scincoides|Leposoma sinepollex|Leposternon cerradensis|Leposternon infraorbitale|Leposternon kisteumacheri|Leposternon maximus|Leposternon microcephalum|Leposternon mineiro|Leposternon octostegum|Leposternon polystegum|Leposternon scutigerum|Leposternon wuchereri|Leptodactylus avivoca|Leptodactylus barrioi|Leptodactylus bolivianus|Leptodactylus brevipes|Leptodactylus bufonius|Leptodactylus caatingae|Leptodactylus camaquara|Leptodactylus cunicularius|Leptodactylus cupreus|Leptodactylus didymus|Leptodactylus diedrus|Leptodactylus discodactylus|Leptodactylus elenae|Leptodactylus flavopictus|Leptodactylus fremitus|Leptodactylus furnarius|Leptodactylus fuscus|Leptodactylus gracilis|Leptodactylus gualambensis|Leptodactylus guianensis|Leptodactylus hylodes|Leptodactylus intermedius|Leptodactylus jolyi|Leptodactylus kilombo|Leptodactylus knudseni|Leptodactylus labyrinthicus|Leptodactylus latinasus|Leptodactylus latrans|Leptodactylus lauramiriamae|Leptodactylus leptodactyloides|Leptodactylus longirostris|Leptodactylus luctator|Leptodactylus macrosternum|Leptodactylus marambaiae|Leptodactylus myersi|Leptodactylus mystaceus|Leptodactylus mystacinus|Leptodactylus natalensis|Leptodactylus notoaktites|Leptodactylus ochraceus|Leptodactylus oreomantis|Leptodactylus paraensis|Leptodactylus paranaru|Leptodactylus payaya|Leptodactylus pentadactylus|Leptodactylus petersii|Leptodactylus plaumanni|Leptodactylus podicipinus|Leptodactylus pustulatus|Leptodactylus rhodomystax|Leptodactylus rhodonotus|Leptodactylus riveroi|Leptodactylus sabanensis|Leptodactylus spixi|Leptodactylus stenodema|Leptodactylus syphax|Leptodactylus tapiti|Leptodactylus troglodytes|Leptodactylus validus|Leptodactylus vastus|Leptodactylus viridis|Leptodactylus wagneri|Leptodactylus watu|Leptodeira annulata|Leptodeira ashmeadi|Leptodeira pulchriceps|Leptodeira tarairiu|Leptomicrurus collaris|Leptomicrurus narduccii|Leptomicrurus scutiventris|Leptophis ahaetulla|Leptophis dibernardoi|Leptophis liocercus|Leptophis marginatus|Leptophis nigromarginatus|Limnomedusa macroglossa|Lioheterophis iheringi|Liolaemus arambarensis|Liolaemus lutzae|Liolaemus occipitalis|Liotyphlops beui|Liotyphlops caissara|Liotyphlops schubarti|Liotyphlops sousai|Liotyphlops taylori|Liotyphlops ternetzii|Liotyphlops trefauti|Liotyphlops wilderi|Lithobates palmipes|Lithodytes lineatus|Loxopholis ferreirai|Loxopholis guianense|Loxopholis osvaldoi|Loxopholis percarinatum|Loxopholis snethlageae|Luetkenotyphlus brasiliensis|Luetkenotyphlus fredi|Luetkenotyphlus insulanus|Lygodactylus klugei|Lygodactylus wetzeli|Lygophis anomalus|Lygophis dilepis|Lygophis flavifrenatus|Lygophis lineatus|Lygophis meridionalis|Lygophis paucidens|Macrogenioglottus alipioi|Manciola guaporicola|Marinussaurus curupira|Mastigodryas boddaerti|Mastigodryas moratoi|Mastigodryas pleii|Megaelosia goeldii|Melanophryniscus admirabilis|Melanophryniscus alipioi|Melanophryniscus atroluteus|Melanophryniscus biancae|Melanophryniscus cambaraensis|Melanophryniscus devincenzii|Melanophryniscus formosus|Melanophryniscus fulvoguttatus|Melanophryniscus klappenbachi|Melanophryniscus macrogranulosus|Melanophryniscus milanoi|Melanophryniscus montevidensis|Melanophryniscus moreirae|Melanophryniscus pachyrhynus|Melanophryniscus peritus|Melanophryniscus sanmartini|Melanophryniscus setiba|Melanophryniscus simplex|Melanophryniscus spectabilis|Melanophryniscus tumifrons|Melanophryniscus vilavelhensis|Melanophryniscus xanthostomus|Melanosuchus niger|Mesobaena rhachicephala|Mesoclemmys gibba|Mesoclemmys jurutiensis|Mesoclemmys nasuta|Mesoclemmys perplexa|Mesoclemmys raniceps|Mesoclemmys sabiniparaensis|Mesoclemmys tuberculata|Mesoclemmys vanderhaegei|Mesoclemmys wermuthi|Mesotes rutilus|Mesotes strigatus|Micrablepharus atticolus|Micrablepharus maximiliani|Microcaecilia butantan|Microcaecilia marvaleewakeae|Microcaecilia rochai|Microcaecilia supernumeraria|Microcaecilia taylori|Microcaecilia trombetas|Micrurus albicinctus|Micrurus altirostris|Micrurus annellatus|Micrurus averyi|Micrurus boicora|Micrurus bolivianus|Micrurus brasiliensis|Micrurus carvalhoi|Micrurus corallinus|Micrurus decoratus|Micrurus diana|Micrurus diutius|Micrurus filiformis|Micrurus frontalis|Micrurus hemprichii|Micrurus ibiboboca|Micrurus isozonus|Micrurus langsdorffi|Micrurus lemniscatus|Micrurus mipartitus|Micrurus nattereri|Micrurus obscurus|Micrurus ortoni|Micrurus pacaraimae|Micrurus paraensis|Micrurus potyguara|Micrurus psyches|Micrurus putumayensis|Micrurus pyrrhocryptus|Micrurus remotus|Micrurus silviae|Micrurus spixii|Micrurus surinamensis|Micrurus tikuna|Micrurus tricolor|Mimosiphonops reinhardti|Mimosiphonops vermiculatus|Mussurana bicolor|Mussurana montana|Mussurana quimi|Myersiella microps|Neblinaphryne imeri|Neblinaphryne mayeri|Nectocaecilia petersii|Neusticurus arekuna|Neusticurus bicarinatus|Neusticurus medemi|Neusticurus racenisi|Neusticurus surinamensis|Ninia hudsoni|Norops auratus|Norops bombiceps|Norops brasiliensis|Norops chrysolepis|Norops fuscoauratus|Norops meridionalis|Norops ortonii|Norops planiceps|Norops scypheus|Norops tandai|Norops trachyderma|Norops williamsii|Nothobachia ablephara|Notomabuya frenata|Nyctimantis arapapa|Nyctimantis bokermanni|Nyctimantis brunoi|Nyctimantis diadorim|Nyctimantis galeata|Nyctimantis pomba|Odontophrynus asper|Odontophrynus carvalhoi|Odontophrynus cultripes|Odontophrynus juquinha|Odontophrynus lavillai|Odontophrynus maisuma|Odontophrynus monachus|Odontophrynus reigi|Odontophrynus toledoi|Ololygon agilis|Ololygon albicans|Ololygon alcatraz|Ololygon angrensis|Ololygon arduoua|Ololygon argyreornata|Ololygon ariadne|Ololygon aromothyella|Ololygon atrata|Ololygon belloni|Ololygon berthae|Ololygon brieni|Ololygon caissara|Ololygon canastrensis|Ololygon cardosoi|Ololygon carnevallii|Ololygon catharinae|Ololygon centralis|Ololygon cosenzai|Ololygon faivovichi|Ololygon feioi|Ololygon flavoguttata|Ololygon garibaldiae|Ololygon goya|Ololygon heyeri|Ololygon hiemalis|Ololygon humilis|Ololygon insperata|Ololygon jureia|Ololygon kautskyi|Ololygon littoralis|Ololygon littorea|Ololygon longilinea|Ololygon luizotavioi|Ololygon machadoi|Ololygon melanodactyla|Ololygon melloi|Ololygon muriciensis|Ololygon obtriangulata|Ololygon paracatu|Ololygon paulofreirei|Ololygon peixotoi|Ololygon perpusilla|Ololygon pixinguinha|Ololygon pombali|Ololygon ranki|Ololygon rizibilis|Ololygon skaios|Ololygon skuki|Ololygon strigilata|Ololygon trapicheiroi|Ololygon tripui|Ololygon tupinamba|Ololygon v-signata|Ophiodes enso|Ophiodes fragilis|Ophiodes striatus|Oreobates antrum|Oreobates heterodactylus|Oreobates quixensis|Oreobates remotus|Oreophrynella quelchii|Oreophrynella weiassipuensis|Oscaecilia hypereumeces|Osteocephalus buckleyi|Osteocephalus cabrerai|Osteocephalus camufatus|Osteocephalus castaneicola|Osteocephalus deridens|Osteocephalus helenae|Osteocephalus heyeri|Osteocephalus leprieurii|Osteocephalus melanops|Osteocephalus oophagus|Osteocephalus planiceps|Osteocephalus subtilis|Osteocephalus taurinus|Osteocephalus vilarsi|Osteocephalus yasuni|Oxybelis aeneus|Oxybelis fulgidus|Oxyrhopus clathratus|Oxyrhopus formosus|Oxyrhopus guibei|Oxyrhopus melanogenys|Oxyrhopus occipitalis|Oxyrhopus petolarius|Oxyrhopus rhombifer|Oxyrhopus trigeminus|Oxyrhopus vanidicus|Paleosuchus palpebrosus|Paleosuchus trigonatus|Palusophis bifossatus|Panopa carvalhoi|Paraphimophis rusticus|Paratelmatobius cardosoi|Paratelmatobius gaigeae|Paratelmatobius lutzii|Paratelmatobius mantiqueira|Paratelmatobius poecilogaster|Paratelmatobius segallai|Paratelmatobius stellaris|Paratelmatobius yepiranga|Peltocephalus dumerilianus|Phalotris concolor|Phalotris labiomaculatus|Phalotris lativittatus|Phalotris lemniscatus|Phalotris matogrossensis|Phalotris mertensi|Phalotris multipunctatus|Phalotris nasutus|Phalotris reticulatus|Phalotris tricolor|Phantasmarana apuana|Phantasmarana bocainensis|Phantasmarana boticariana|Phantasmarana curucutuensis|Phantasmarana jordanensis|Phantasmarana lutzae|Phantasmarana massarti|Phantasmarana tamuia|Phasmahyla cochranae|Phasmahyla cruzi|Phasmahyla exilis|Phasmahyla guttata|Phasmahyla jandaia|Phasmahyla lisbella|Phasmahyla spectabilis|Phasmahyla timbo|Philodryas aestiva|Philodryas livida|Philodryas mattogrossensis|Philodryas nattereri|Philodryas olfersii|Philodryas psammophidea|Phimophis guerini|Phimophis guianensis|Phrynomedusa appendiculata|Phrynomedusa bokermanni|Phrynomedusa dryade|Phrynomedusa fimbriata|Phrynomedusa marginata|Phrynomedusa vanzolinii|Phrynonax polylepis|Phrynops geoffroanus|Phrynops hilarii|Phrynops tuberosus|Phrynops williamsi|Phyllodytes acuminatus|Phyllodytes amadoi|Phyllodytes brevirostris|Phyllodytes edelmoi|Phyllodytes gyrinaethes|Phyllodytes iuna|Phyllodytes kautskyi|Phyllodytes luteolus|Phyllodytes maculosus|Phyllodytes magnus|Phyllodytes megatympanum|Phyllodytes melanomystax|Phyllodytes praeceptor|Phyllodytes punctatus|Phyllodytes tuberculosus|Phyllodytes wuchereri|Phyllomedusa bahiana|Phyllomedusa bicolor|Phyllomedusa boliviana|Phyllomedusa burmeisteri|Phyllomedusa camba|Phyllomedusa distincta|Phyllomedusa iheringii|Phyllomedusa sauvagii|Phyllomedusa tarsius|Phyllomedusa tetraploidea|Phyllomedusa vaillantii|Phyllonastes myrmecoides|Phyllopezus diamantino|Phyllopezus lutzae|Phyllopezus periosus|Phyllopezus pollicaris|Phyllopezus przewalskii|Phyllopezus selmae|Physalaemus aguirrei|Physalaemus albifrons|Physalaemus albonotatus|Physalaemus angrensis|Physalaemus araxa|Physalaemus atim|Physalaemus atlanticus|Physalaemus barrioi|Physalaemus biligonigerus|Physalaemus bokermanni|Physalaemus caete|Physalaemus camacan|Physalaemus carrizorum|Physalaemus centralis|Physalaemus cicada|Physalaemus claptoni|Physalaemus crombiei|Physalaemus cuvieri|Physalaemus deimaticus|Physalaemus ephippifer|Physalaemus erikae|Physalaemus erythros|Physalaemus evangelistai|Physalaemus feioi|Physalaemus gracilis|Physalaemus henselii|Physalaemus insperatus|Physalaemus irroratus|Physalaemus jordanensis|Physalaemus kroyeri|Physalaemus lateristriga|Physalaemus lisei|Physalaemus maculiventris|Physalaemus marmoratus|Physalaemus maximus|Physalaemus moreirae|Physalaemus nanus|Physalaemus nattereri|Physalaemus obtectus|Physalaemus olfersii|Physalaemus orophilus|Physalaemus riograndensis|Physalaemus rupestris|Physalaemus signifer|Physalaemus soaresi|Physalaemus spiniger|Phyzelaphryne miriamae|Phyzelaphryne nimio|Pipa arrabali|Pipa carvalhoi|Pipa pipa|Pipa snethlageae|Pithecopus araguaius|Pithecopus ayeaye|Pithecopus azureus|Pithecopus centralis|Pithecopus gonzagai|Pithecopus hypochondrialis|Pithecopus megacephalus|Pithecopus nordestinus|Pithecopus oreades|Pithecopus palliatus|Pithecopus rohdei|Pithecopus rusticus|Placosoma cipoense|Placosoma cordylinum|Placosoma glabellum|Placosoma limaverdorum|Platemys platycephala|Pleurodema alium|Pleurodema bibroni|Pleurodema brachyops|Pleurodema diplolister|Plica plica|Plica umbra|Podocnemis erythrocephala|Podocnemis expansa|Podocnemis sextuberculata|Podocnemis unifilis|Polychrus acutirostris|Polychrus liogaster|Polychrus marmoratus|Potamites ecpleopus|Potamites juruazensis|Potomotyphlus kaupii|Pristimantis acuminatus|Pristimantis aureolineatus|Pristimantis buccinator|Pristimantis campinarana|Pristimantis carvalhoi|Pristimantis chiastonotus|Pristimantis crepitaculus|Pristimantis dundeei|Pristimantis espedeus|Pristimantis fenestratus|Pristimantis fouqueti|Pristimantis giorgii|Pristimantis grandoculis|Pristimantis guianensis|Pristimantis gutturalis|Pristimantis inguinalis|Pristimantis koehleri|Pristimantis lacrimosus|Pristimantis lanthanites|Pristimantis latro|Pristimantis lirellus|Pristimantis luscombei|Pristimantis malkini|Pristimantis memorans|Pristimantis moa|Pristimantis ockendeni|Pristimantis orcus|Pristimantis paulodutrai|Pristimantis paulogabrieli|Pristimantis peruvianus|Pristimantis pictus|Pristimantis ramagii|Pristimantis reichlei|Pristimantis relictus|Pristimantis rupicola|Pristimantis skydmainos|Pristimantis toftae|Pristimantis ventrigranulosus|Pristimantis vilarsi|Pristimantis vinhai|Pristimantis zeuctotylus|Pristimantis zimmermanae|Procellosaurinus erythrocercus|Procellosaurinus tetradactylus|Proceratophrys appendiculata|Proceratophrys ararype|Proceratophrys avelinoi|Proceratophrys bagnoi|Proceratophrys belzebul|Proceratophrys bigibbosa|Proceratophrys boiei|Proceratophrys branti|Proceratophrys brauni|Proceratophrys carranca|Proceratophrys concavitympanum|Proceratophrys cristiceps|Proceratophrys cururu|Proceratophrys dibernardoi|Proceratophrys gladius|Proceratophrys goyana|Proceratophrys huntingtoni|Proceratophrys itamari|Proceratophrys izecksohni|Proceratophrys korekore|Proceratophrys laticeps|Proceratophrys mantiqueira|Proceratophrys melanopogon|Proceratophrys minuta|Proceratophrys moehringi|Proceratophrys moratoi|Proceratophrys palustris|Proceratophrys paviotii|Proceratophrys phyllostomus|Proceratophrys pombali|Proceratophrys redacta|Proceratophrys renalis|Proceratophrys rondonae|Proceratophrys rotundipalpebra|Proceratophrys salvatori|Proceratophrys sanctaritae|Proceratophrys schirchi|Proceratophrys strussmannae|Proceratophrys subguttata|Proceratophrys tupinamba|Proceratophrys velhochico|Proceratophrys vielliardi|Pseudablabes agassizii|Pseudablabes arnaldoi|Pseudablabes patagoniensis|Pseudis bolbodactyla|Pseudis boliviana|Pseudis caraya|Pseudis cardosoi|Pseudis fusca|Pseudis laevis|Pseudis limellum|Pseudis minuta|Pseudis paradoxa|Pseudis platensis|Pseudis tocantins|Pseudoboa coronata|Pseudoboa haasi|Pseudoboa martinsi|Pseudoboa neuwiedii|Pseudoboa nigra|Pseudoboa serrana|Pseudoeryx plicatilis|Pseudogonatodes gasconi|Pseudogonatodes guianensis|Pseudopaludicola ameghini|Pseudopaludicola atragula|Pseudopaludicola boliviana|Pseudopaludicola canga|Pseudopaludicola ceratophyes|Pseudopaludicola chimaera|Pseudopaludicola coracoralinae|Pseudopaludicola facureae|Pseudopaludicola falcipes|Pseudopaludicola florencei|Pseudopaludicola giarettai|Pseudopaludicola hyleaustralis|Pseudopaludicola ibisoroca|Pseudopaludicola jaredi|Pseudopaludicola javae|Pseudopaludicola jazmynmcdonaldae|Pseudopaludicola matuta|Pseudopaludicola mineira|Pseudopaludicola motorzinho|Pseudopaludicola murundu|Pseudopaludicola mystacalis|Pseudopaludicola pocoto|Pseudopaludicola restinga|Pseudopaludicola saltica|Pseudopaludicola ternetzi|Psilops mucugensis|Psilops paeminosus|Psilops seductus|Psomophis genimaculatus|Psomophis joberti|Psomophis obtusus|Psychosaura agmosticha|Psychosaura macrorhyncha|Ptychophis flavovirgatus|Ranacephala hogei|Ranitomeya aetherea|Ranitomeya amazonica|Ranitomeya aquamarina|Ranitomeya cyanovittata|Ranitomeya defleri|Ranitomeya hwata|Ranitomeya toraro|Ranitomeya uakarii|Ranitomeya vanzolinii|Ranitomeya variabilis|Rhachidelus brazili|Rhachisaurus brachylepis|Rhaebo guttatus|Rhinatrema bivittatum|Rhinatrema gilbertogili|Rhinatrema ron|Rhinatrema uaiuai|Rhinella achavali|Rhinella acutirostris|Rhinella arenarum|Rhinella azarai|Rhinella bergi|Rhinella casconi|Rhinella castaneotica|Rhinella cerradensis|Rhinella crucifer|Rhinella dapsilis|Rhinella diptycha|Rhinella dorbignyi|Rhinella exostosica|Rhinella granulosa|Rhinella henseli|Rhinella hoogmoedi|Rhinella icterica|Rhinella inopina|Rhinella lescurei|Rhinella magnussoni|Rhinella major|Rhinella margaritifera|Rhinella marina|Rhinella martyi|Rhinella merianae|Rhinella mirandaribeiroi|Rhinella nattereri|Rhinella ocellata|Rhinella ornata|Rhinella parecis|Rhinella poeppigii|Rhinella proboscidea|Rhinella pygmaea|Rhinella roqueana|Rhinella rubescens|Rhinella sebbeni|Rhinella stanlaii|Rhinella teotoniensis|Rhinella veredas|Rhinemys rufipes|Rhinobothryum lentiginosum|Rhinoclemmys punctularia|Riolama grandis|Riolama stellata|Rodriguesophis chui|Rodriguesophis iglesiasi|Rodriguesophis scriptorcibatus|Rondonops biscutatus|Rondonops xanthomystax|Rupirana cardosoi|Rupirana kaatinga|Salvator duseni|Salvator merianae|Scarthyla goinorum|Scinax acuminatus|Scinax albertinae|Scinax alter|Scinax auratus|Scinax boesemani|Scinax cabralensis|Scinax caldarum|Scinax chiquitanus|Scinax coerulea|Scinax constrictus|Scinax cretatus|Scinax crospedospilus|Scinax cruentomma|Scinax curicica|Scinax cuspidatus|Scinax dolloi|Scinax duartei|Scinax eurydice|Scinax exiguus|Scinax funereus|Scinax fuscomarginatus|Scinax fuscovarius|Scinax garbei|Scinax granulatus|Scinax haddadorum|Scinax hayii|Scinax ictericus|Scinax imbegue|Scinax iquitorum|Scinax jolyi|Scinax juncae|Scinax juruena|Scinax kennedyi|Scinax lindsayi|Scinax madeirae|Scinax maracaya|Scinax montivagus|Scinax nasicus|Scinax nebulosus|Scinax onca|Scinax pachycrus|Scinax pedromedinae|Scinax perereca|Scinax proboscideus|Scinax ritaleeae|Scinax rogerioi|Scinax rossaferesae|Scinax rostratus|Scinax ruber|Scinax ruberoculatus|Scinax rupestris|Scinax sateremawe|Scinax similis|Scinax squalirostris|Scinax strussmannae|Scinax tigrinus|Scinax tropicalia|Scinax tymbamirim|Scinax villasboasi|Scinax x-signatus|Scriptosaura catimbau|Scythrophrys sawayae|Siagonodon acutirostris|Siagonodon cupinensis|Siagonodon septemstriatus|Sibon nebulatus|Simophis rhinostoma|Siphlophis cervinus|Siphlophis compressus|Siphlophis leucocephalus|Siphlophis longicaudatus|Siphlophis pulcher|Siphlophis worontzowi|Siphonops annulatus|Siphonops hardyi|Siphonops leucoderus|Siphonops paulensis|Sordellina punctata|Sphaenorhynchus botocudo|Sphaenorhynchus bromelicola|Sphaenorhynchus cammaeus|Sphaenorhynchus canga|Sphaenorhynchus caramaschii|Sphaenorhynchus carneus|Sphaenorhynchus dorisae|Sphaenorhynchus lacteus|Sphaenorhynchus mirim|Sphaenorhynchus palustris|Sphaenorhynchus planicola|Sphaenorhynchus platycephalus|Sphaenorhynchus prasinus|Sphaenorhynchus surdus|Spilotes pullatus|Spilotes sulphureus|Stefania neblinae|Stefania tamacuarina|Stenocercus albolineatus|Stenocercus azureus|Stenocercus caducus|Stenocercus canastra|Stenocercus dumerilii|Stenocercus fimbriatus|Stenocercus quinarius|Stenocercus roseiventris|Stenocercus sinesaccus|Stenocercus squarrosus|Stenocercus tricristatus|Stenolepis ridleyi|Stereocyclops histrio|Stereocyclops incrassatus|Stereocyclops palmipes|Stereocyclops parkeri|Strabomantis sulcatus|Strobilurus torquatus|Synapturanus ajuricaba|Synapturanus mirandaribeiroi|Synapturanus zombie|Tachymenis ocellata|Taeniophallus brevirostris|Taeniophallus nicagus|Tantilla boipiranga|Tantilla melanocephala|Teius oculatus|Teius teyou|Tepuihyla shushupe|Teratohyla adenocheira|Teratohyla midas|Thamnodynastes longicaudus|Thamnodynastes pallidus|Thamnodynastes sertanejo|Thamnodynastes silvai|Thecadactylus rapicauda|Thecadactylus solimoensis|Thoropa bryomantis|Thoropa lutzi|Thoropa megatympanum|Thoropa miliaris|Thoropa petropolitana|Thoropa saxatilis|Thoropa taophora|Tomodon dorsatus|Trachemys adiutrix|Trachemys dorbigni|Trachycephalus atlas|Trachycephalus coriaceus|Trachycephalus cunauaru|Trachycephalus dibernardoi|Trachycephalus hadroceps|Trachycephalus helioi|Trachycephalus imitatrix|Trachycephalus lepidus|Trachycephalus mambaiensis|Trachycephalus mesophaeus|Trachycephalus nigromaculatus|Trachycephalus resinifictrix|Trachycephalus typhonius|Trachycephalus venezolanus|Trachylepis atlantica|Tretioscincus agilis|Tretioscincus oriximinensis|Trilepida brasiliensis|Trilepida dimidiata|Trilepida fuliginosa|Trilepida jani|Trilepida koppesi|Trilepida macrolepis|Trilepida salgueiroi|Tropidodryas serra|Tropidodryas striaticeps|Tropidophis grapiuna|Tropidophis paucisquamis|Tropidophis preciosus|Tropidurus callathelys|Tropidurus catalanensis|Tropidurus chromatops|Tropidurus cocorobensis|Tropidurus erythrocephalus|Tropidurus etheridgei|Tropidurus helenae|Tropidurus hispidus|Tropidurus hygomi|Tropidurus imbituba|Tropidurus insulanus|Tropidurus itambere|Tropidurus jaguaribanus|Tropidurus lagunablanca|Tropidurus montanus|Tropidurus mucujensis|Tropidurus oreadicus|Tropidurus pinima|Tropidurus psammonastes|Tropidurus semitaeniatus|Tropidurus sertanejo|Tropidurus torquatus|Tupinambis cryptus|Tupinambis cuzcoensis|Tupinambis longilineus|Tupinambis matipu|Tupinambis palustris|Tupinambis quadrilineatus|Tupinambis teguixin|Typhlonectes compressicauda|Typhlophis squamosus|Uracentron azureum|Uracentron flaviceps|Uranoscodon superciliosus|Urostrophus vautieri|Vanzosaura multiscutata|Vanzosaura rubricauda|Vanzosaura savanicola|Varzea altamazonica|Varzea bistriata|Vitreorana assuh|Vitreorana baliomma|Vitreorana eurygnatha|Vitreorana franciscana|Vitreorana parvula|Vitreorana ritae|Xenodon dorbignyi|Xenodon guentheri|Xenodon histricus|Xenodon matogrossensis|Xenodon merremii|Xenodon nattereri|Xenodon neuwiedii|Xenodon pulcher|Xenodon rabdocephalus|Xenodon severus|Xenodon werneri|Xenohyla eugenioi|Xenohyla truncata|Xenopholis scalaris|Xenopholis undulatus|Xenopholis werdingorum|Xenoxybelis argenteus|Xenoxybelis boulengeri|Zonateres lanei".split("|"),cust=[],spp=[],spk=[];
+function nz(x){return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
+function spSort(){spp.sort(function(a,b){a=nz(a);b=nz(b);return a<b?-1:a>b?1:0});spk=spp.map(nz)}
+function spLoad(){try{var r=localStorage.getItem(SPK);cust=r?JSON.parse(r):[]}catch(e){cust=[]}if(!Array.isArray(cust))cust=[];var seen={};spp=[];BASE.concat(cust).forEach(function(x){var k=nz(x);if(!seen[k]){seen[k]=1;spp.push(x)}});spSort()}
+function addSp(x){x=String(x||"").replace(/\s+/g," ").trim();if(!x||spk.indexOf(nz(x))>-1)return 0;cust.push(x);spp.push(x);try{localStorage.setItem(SPK,JSON.stringify(cust))}catch(e){}spSort();return 1}
+var esp=$("esp"),sug=$("sug");
+function hideSug(){sug.hidden=true;sug.textContent=""}
+function showSug(){
+ var v=esp.value.trim();if(v.length<2){hideSug();return}
+ var q=nz(v),a=[],b=[],exact=false;
+ for(var i=0;i<spk.length;i++){var p=spk[i].indexOf(q);if(spk[i]===q)exact=true;if(p===0)a.push(spp[i]);else if(p>0)b.push(spp[i])}
+ var res=a.concat(b).slice(0,8);sug.textContent="";
+ res.forEach(function(n){var bt=document.createElement("button");bt.type="button";bt.textContent=n;bt.onmousedown=function(e){e.preventDefault()};bt.onclick=function(){esp.value=n;hideSug()};sug.appendChild(bt)});
+ if(!exact){var d=document.createElement("div");d.className="nw";d.textContent=res.length?"Não achou? Continue digitando para incluir uma nova espécie.":"Espécie nova: será adicionada à lista ao salvar.";sug.appendChild(d)}
+ sug.hidden=false;
+}
+esp.addEventListener("input",showSug);esp.addEventListener("focus",showSug);esp.addEventListener("blur",function(){setTimeout(hideSug,200)});
+
+var horIn=$("hor");
+horIn.addEventListener("input",function(){
+ var v=horIn.value.replace(/\D/g,"").slice(0,4);
+ if(v.length>=3)v=v.slice(0,2)+":"+v.slice(2);
+ horIn.value=v;
+});
+horIn.addEventListener("blur",function(){
+ var v=horIn.value.replace(/\D/g,"");
+ if(v.length===3)v="0"+v;
+ if(v.length===4){
+  var h=parseInt(v.slice(0,2),10),m=parseInt(v.slice(2),10);
+  if(h<0||h>23||m<0||m>59){horIn.value="";return}
+  horIn.value=(h<10?"0":"")+h+":"+(m<10?"0":"")+m;
+ }else if(v.length===0){horIn.value=""}else{horIn.value=""}
+});
+
+var UFS=[["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]];
+function ufSigla(v){v=String(v||"").trim();if(!v)return"";var k=nz(v);for(var i=0;i<UFS.length;i++){if(nz(UFS[i][0])===k||nz(UFS[i][1])===k)return UFS[i][0]}return""}
+function ufName(v){v=String(v||"").trim();if(!v)return"";var k=nz(v);for(var i=0;i<UFS.length;i++){if(nz(UFS[i][0])===k||nz(UFS[i][1])===k)return UFS[i][1]}return v}
+
+var MUNK="campo-municipios-",munCache={},munBusy={};
+function munFor(s){if(!s)return[];if(munCache[s])return munCache[s];try{var t=localStorage.getItem(MUNK+s);if(t){var a=JSON.parse(t);if(Array.isArray(a)&&a.length){munCache[s]=a;return a}}}catch(e){}return[]}
+function munFetch(s,cb){
+ if(!s||munBusy[s])return;
+ munBusy[s]=1;
+ try{
+  fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados/"+encodeURIComponent(s)+"/municipios?orderBy=nome")
+   .then(function(r){if(!r.ok)throw 0;return r.json()})
+   .then(function(j){
+    var n=(j||[]).map(function(m){return m&&m.nome}).filter(Boolean);
+    if(n.length){munCache[s]=n;try{localStorage.setItem(MUNK+s,JSON.stringify(n))}catch(e){}}
+    munBusy[s]=0;if(cb)cb(n.length>0);
+   })
+   .catch(function(){munBusy[s]=0});
+ }catch(e){munBusy[s]=0}
+}
+
+function mkAC(inp,sugEl,getItems,noteFn){
+ function hide(){sugEl.hidden=true;sugEl.textContent=""}
+ function show(){
+  var v=inp.value.trim();
+  if(!v){hide();return}
+  var q=nz(v),items=getItems()||[],a=[],b=[],exact=false;
+  for(var i=0;i<items.length;i++){
+   var it=items[i],mn=nz(it.v),mx=it.x?nz(it.x):"",p=mn.indexOf(q),px=mx?mx.indexOf(q):-1;
+   if(mn===q||(mx&&mx===q))exact=true;
+   if(p===0||px===0)a.push(it);else if(p>0||px>0)b.push(it);
+  }
+  var res=a.concat(b).slice(0,8);sugEl.textContent="";
+  res.forEach(function(it){
+   var bt=document.createElement("button");bt.type="button";bt.textContent=it.d||it.v;
+   bt.onmousedown=function(e){e.preventDefault()};
+   bt.onclick=function(){inp.value=it.v;hide();inp.dispatchEvent(new Event("change"))};
+   sugEl.appendChild(bt);
+  });
+  if(!exact&&noteFn){
+   var t=res.length?"Continue digitando se a opção não estiver na lista.":noteFn();
+   if(t){var d=document.createElement("div");d.className="nw";d.textContent=t;sugEl.appendChild(d)}
+  }
+  sugEl.hidden=false;
+ }
+ inp.addEventListener("input",show);
+ inp.addEventListener("focus",show);
+ inp.addEventListener("blur",function(){setTimeout(hide,200)});
+ return{show:show,hide:hide};
+}
+
+var ufIn=$("uf"),munIn=$("mun");
+var munAC=mkAC(munIn,$("sugMun"),function(){
+ var s=ufSigla(ufIn.value);if(!s)return[];
+ var L=munFor(s);
+ if(!L.length)munFetch(s,function(ok){if(ok&&document.activeElement===munIn)munAC.show()});
+ return L.map(function(n){return{v:n,d:n}});
+},function(){return ufSigla(ufIn.value)?"Município não encontrado na lista. Você pode digitar livremente.":"Selecione o estado acima para ver a lista de municípios."});
+var ufAC=mkAC(ufIn,$("sugUf"),function(){
+ return UFS.map(function(u){return{v:u[1],x:u[0],d:u[1]+" ("+u[0]+")"}});
+},function(){return"Estado não encontrado. Digite a sigla (ex.: BA) ou o nome completo."});
+
+function ufSync(){
+ var s=ufSigla(ufIn.value);
+ if(s)munFetch(s,function(ok){if(ok&&document.activeElement===munIn)munAC.show()});
+}
+ufIn.addEventListener("change",ufSync);
+ufIn.addEventListener("blur",function(){
+ setTimeout(function(){
+  var n=ufName(ufIn.value);
+  if(n&&n!==ufIn.value&&ufSigla(n)){ufIn.value=n;ufSync()}
+ },300);
+});
+
+function setAccDate(){
+ var el=$("accdate");if(!el)return;
+ var d=new Date();
+ el.textContent=p2(d.getDate())+"/"+p2(d.getMonth()+1)+"/"+d.getFullYear();
+}
+
+/* ============================================================
+   INSTALAÇÃO PWA (Android / iOS / desktop)
+   - O botão fica SEMPRE visível, exceto quando o app já está
+     instalado (modo standalone), quando é escondido pelo CSS.
+   - Clique:
+       1) prompt nativo (Chrome/Edge/Brave/Samsung) → abre direto
+       2) iOS → modal com instruções do Safari
+       3) demais (Android sem prompt, Desktop, outros) → modal genérico
+   ============================================================ */
+var deferredPrompt = null,
+    installWrap   = $("installWrap"),
+    installBtn    = $("installBtn"),
+    iosModal      = $("iosModal"),
+    installModal  = $("installModal");
+
+function isStandalone(){
+  try{
+    if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    if(window.navigator.standalone === true) return true;
+    if(window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) return true;
+    if(window.matchMedia && window.matchMedia("(display-mode: minimal-ui)").matches) return true;
+  }catch(e){}
+  return false;
+}
+function isIOS(){
+  var ua = navigator.userAgent || "";
+  if(/iPad|iPhone|iPod/.test(ua)) return true;
+  if(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
+  return false;
+}
+
+function hideInstall(){
+  if(installWrap) installWrap.hidden = true;
+}
+function refreshInstall(){
+  if(!installWrap) return;
+  installWrap.hidden = isStandalone();
+}
+
+if(installBtn){
+  installBtn.addEventListener("click", function(){
+    // 1) Prompt nativo (Chrome/Edge/Brave/Samsung)
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(c){
+        if(c && c.outcome === "accepted") hideInstall();
+        deferredPrompt = null;
+        refreshInstall();
+      }).catch(function(){ deferredPrompt = null; refreshInstall(); });
+      return;
+    }
+    // 2) iOS → instruções específicas do Safari
+    if(isIOS()){
+      if(iosModal) iosModal.hidden = false;
+      return;
+    }
+    // 3) Genérico → Android sem prompt, Desktop e outros
+    if(installModal) installModal.hidden = false;
+  });
+}
+
+// Fechar modais
+if(iosModal){
+  var closeIos = $("closeModal");
+  if(closeIos) closeIos.addEventListener("click", function(){ iosModal.hidden = true; });
+  iosModal.addEventListener("click", function(e){ if(e.target === iosModal) iosModal.hidden = true; });
+}
+if(installModal){
+  var closeIns = $("closeInstallModal");
+  if(closeIns) closeIns.addEventListener("click", function(){ installModal.hidden = true; });
+  installModal.addEventListener("click", function(e){ if(e.target === installModal) installModal.hidden = true; });
+}
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    if(iosModal)     iosModal.hidden     = true;
+    if(installModal) installModal.hidden = true;
+  }
+});
+
+// Eventos PWA
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  deferredPrompt = e;
+  refreshInstall();
+});
+window.addEventListener("appinstalled", function(){
+  deferredPrompt = null;
+  hideInstall();
+  if(iosModal)     iosModal.hidden     = true;
+  if(installModal) installModal.hidden = true;
+  var m = $("msg"); if(m) m.textContent = "Aplicativo instalado com sucesso!";
+});
+if(window.matchMedia){
+  try{
+    var mq = window.matchMedia("(display-mode: standalone)");
+    var onCh = function(){ refreshInstall(); };
+    if(mq.addEventListener) mq.addEventListener("change", onCh);
+    else if(mq.addListener) mq.addListener(onCh);
+  }catch(e){}
+}
+
+spLoad();load();loadLast();render();fresh();setAccDate();refreshInstall();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+})();
+</script>
+</body>
+</html>
