@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0f5c5c">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Caderno Herp">
@@ -360,13 +360,11 @@ function setAccDate(){
 }
 
 /* ============================================================
-   INSTALAÇÃO PWA (Android / iOS / desktop)
-   - O botão fica SEMPRE visível, exceto quando o app já está
-     instalado (modo standalone), quando é escondido pelo CSS.
-   - Clique:
-       1) prompt nativo (Chrome/Edge/Brave/Samsung) → abre direto
-       2) iOS → modal com instruções do Safari
-       3) demais (Android sem prompt, Desktop, outros) → modal genérico
+   INSTALAÇÃO PWA — botão SEMPRE visível (exceto quando já instalado)
+   Fluxo do clique:
+     1) prompt nativo (Chrome/Edge/Brave/Samsung)
+     2) iOS → modal com instruções do Safari
+     3) demais (Android sem prompt / Desktop / outros) → modal genérico
    ============================================================ */
 var deferredPrompt = null,
     installWrap   = $("installWrap"),
@@ -400,7 +398,6 @@ function refreshInstall(){
 
 if(installBtn){
   installBtn.addEventListener("click", function(){
-    // 1) Prompt nativo (Chrome/Edge/Brave/Samsung)
     if(deferredPrompt){
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function(c){
@@ -410,17 +407,14 @@ if(installBtn){
       }).catch(function(){ deferredPrompt = null; refreshInstall(); });
       return;
     }
-    // 2) iOS → instruções específicas do Safari
     if(isIOS()){
       if(iosModal) iosModal.hidden = false;
       return;
     }
-    // 3) Genérico → Android sem prompt, Desktop e outros
     if(installModal) installModal.hidden = false;
   });
 }
 
-// Fechar modais
 if(iosModal){
   var closeIos = $("closeModal");
   if(closeIos) closeIos.addEventListener("click", function(){ iosModal.hidden = true; });
@@ -438,7 +432,6 @@ document.addEventListener("keydown", function(e){
   }
 });
 
-// Eventos PWA
 window.addEventListener("beforeinstallprompt", function(e){
   e.preventDefault();
   deferredPrompt = e;
