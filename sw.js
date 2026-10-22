@@ -1,9 +1,10 @@
 /* ============================================================
    Caderno Herpetológico — Service Worker
-   v2: limpa cache antigo (que servia o index.html sem o botão)
+   v3: força atualização do index.html e do manifest em cache.
+       (v2 servia o index.html antigo sem o botão de instalação)
    ============================================================ */
 
-var CACHE = "caderno-herp-v2";
+var CACHE = "caderno-herp-v3";
 
 var ESSENCIAIS = [
   "./",
