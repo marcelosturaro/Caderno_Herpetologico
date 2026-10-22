@@ -1,10 +1,10 @@
 /* ============================================================
    Caderno Herpetológico — Service Worker
-   v4: ícones/manifest corrigidos; só armazena respostas válidas (200);
+   v5: ícones/manifest corrigidos; só armazena respostas válidas (200);
        HTML em "rede primeiro" com fallback offline; demais em cache primeiro.
    ============================================================ */
 
-var CACHE = "caderno-herp-v4";
+var CACHE = "caderno-herp-v5";
 
 var ESSENCIAIS = [
   "./",

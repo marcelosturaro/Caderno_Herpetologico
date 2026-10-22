@@ -64,6 +64,9 @@ textarea.out{width:100%;min-height:120px;margin-top:10px;font:13px monospace}
 .install-wrap{margin:0 0 16px}
 .install-wrap button{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;font-size:.98rem}
 .install-wrap svg{width:20px;height:20px;flex-shrink:0}
+.install-status{margin:6px 2px 0;font-size:.8rem;color:var(--mut);text-align:center}
+.install-status.ok{color:var(--acc);font-weight:600}
+.install-status.bad{color:var(--warn)}
 @media (display-mode: standalone),
        (display-mode: fullscreen),
        (display-mode: minimal-ui) {
@@ -92,6 +95,7 @@ textarea.out{width:100%;min-height:120px;margin-top:10px;font:13px monospace}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
     <span id="installLabel">Instalar aplicativo</span>
   </button>
+  <p class="install-status" id="installStatus" aria-live="polite"></p>
 </div>
 
 <form id="f" autocomplete="off">
@@ -402,9 +406,30 @@ function isInApp(){
 function isFirefox(){ return /Firefox|FxiOS/i.test(navigator.userAgent || ""); }
 
 function hideInstall(){ if(installWrap) installWrap.hidden = true; }
+function setStatus(txt, cls){
+  var el = $("installStatus"); if(!el) return;
+  el.textContent = txt || ""; el.className = "install-status" + (cls ? " " + cls : "");
+}
 function refreshInstall(){
   if(!installWrap) return;
   installWrap.hidden = isStandalone();
+  if(installWrap.hidden) return;
+  if(deferredPrompt || window.__bip) setStatus("✔ Pronto: instalação automática disponível", "ok");
+}
+
+/* Diagnóstico: verifica se manifest e ícones realmente existem no servidor */
+function diagnosticar(){
+  var faltando = [];
+  return fetch("manifest.webmanifest", {cache:"no-store"}).then(function(r){
+    if(!r.ok){ faltando.push("manifest.webmanifest"); return []; }
+    return r.json().then(function(m){ return (m.icons||[]).map(function(i){ return i.src; }); });
+  }).catch(function(){ faltando.push("manifest.webmanifest"); return []; })
+  .then(function(srcs){
+    return Promise.all(srcs.map(function(src){
+      return fetch(src, {cache:"no-store"}).then(function(r){ if(!r.ok) faltando.push(src); })
+        .catch(function(){ faltando.push(src); });
+    }));
+  }).then(function(){ return faltando; });
 }
 
 function mostrarInstrucoes(){
@@ -419,39 +444,63 @@ function mostrarInstrucoes(){
         "<li>Toque em <strong>Instalar</strong> (ou <strong>Adicionar à tela inicial</strong>).</li>"+
         "<li>Confirme.</li></ol>";
   }else if(isAndroid()){
-    t = "<p>O navegador ainda não liberou a instalação automática. Aguarde alguns segundos e toque de novo no botão, ou instale pelo menu:</p>"+
-        "<ol><li>Abra o menu <strong>⋮</strong> do Chrome.</li>"+
-        "<li>Escolha <strong>Instalar aplicativo</strong> (ou <strong>Adicionar à tela inicial</strong>).</li>"+
-        "<li>Confirme em <strong>Instalar</strong>.</li></ol>"+
-        "<p class=\"hint\">Se a opção não aparecer, atualize a página e tente novamente.</p>";
+    t = "<p>O Chrome não liberou a instalação automática agora. Causas mais comuns:</p>"+
+        "<ul><li>o app <strong>já está instalado</strong> (procure o ícone na tela inicial ou na gaveta de apps);</li>"+
+        "<li>a página foi aberta em <strong>aba anônima</strong>;</li>"+
+        "<li>você recusou o prompt há pouco tempo (o Chrome espera alguns dias para oferecer de novo);</li>"+
+        "<li>versão antiga em cache: limpe os dados do site e recarregue.</li></ul>"+
+        "<p>Instale manualmente: menu <strong>⋮</strong> → <strong>Instalar aplicativo</strong> (ou <em>Adicionar à tela inicial</em>) → <strong>Instalar</strong>.</p>";
   }else{
     t = "<ol><li>Clique no ícone de instalação na barra de endereços (ou no menu <strong>⋮</strong>).</li>"+
         "<li>Escolha <strong>Instalar Caderno Herpetológico</strong>.</li>"+
         "<li>Confirme em <strong>Instalar</strong>.</li></ol>";
   }
+  t += "<p class=\"hint\" id=\"diagOut\">Verificando arquivos do app…</p>";
   if(installBody) installBody.innerHTML = t;
   if(installModal) installModal.hidden = false;
+  diagnosticar().then(function(f){
+    var o = $("diagOut"); if(!o) return;
+    if(f.length){
+      o.className = "hint bad";
+      o.textContent = "⚠ Arquivos NÃO encontrados no servidor: " + f.join(", ") + ". Envie-os para a mesma pasta do index.html no GitHub; sem eles o Chrome não instala o app nem mostra o ícone.";
+    }else{
+      o.textContent = "✔ Manifest e ícones encontrados no servidor.";
+    }
+  });
+}
+
+function dispararPrompt(dp){
+  deferredPrompt = null; window.__bip = null;   /* o evento só pode ser usado uma vez */
+  try{
+    dp.prompt();
+    Promise.resolve(dp.userChoice).then(function(c){
+      if(c && c.outcome === "accepted"){ hideInstall(); }
+      else setStatus("Instalação cancelada. Toque no botão para tentar de novo.", "");
+    }).catch(function(){});
+  }catch(err){ mostrarInstrucoes(); }
 }
 
 if(installBtn){
   installBtn.addEventListener("click", function(){
     var dp = deferredPrompt || window.__bip;
-    if(dp){
-      deferredPrompt = null; window.__bip = null;   /* o evento só pode ser usado uma vez */
-      try{
-        dp.prompt();
-        Promise.resolve(dp.userChoice).then(function(c){
-          if(c && c.outcome === "accepted") hideInstall();
-          refreshInstall();
-        }).catch(function(){ refreshInstall(); });
-      }catch(err){ mostrarInstrucoes(); }
-      return;
+    if(dp){ dispararPrompt(dp); return; }
+    if(isIOS()){ if(iosModal) iosModal.hidden = false; return; }
+    if(isInApp() || isFirefox()){ mostrarInstrucoes(); return; }
+    /* Chrome ainda não liberou o evento: aguarda até 2,5 s antes de cair nas instruções */
+    setStatus("Preparando instalação…", "");
+    var feito = false;
+    function onReady(){
+      if(feito) return; feito = true;
+      window.removeEventListener("bip-ready", onReady);
+      if(window.__bip) dispararPrompt(window.__bip);
     }
-    if(isIOS()){
-      if(iosModal) iosModal.hidden = false;
-      return;
-    }
-    mostrarInstrucoes();
+    window.addEventListener("bip-ready", onReady);
+    setTimeout(function(){
+      if(feito) return; feito = true;
+      window.removeEventListener("bip-ready", onReady);
+      setStatus("Instalação automática indisponível agora.", "bad");
+      mostrarInstrucoes();
+    }, 2500);
   });
 }
 
@@ -493,6 +542,11 @@ if(window.matchMedia){
 }
 
 spLoad();load();loadLast();render();fresh();setAccDate();refreshInstall();
+setTimeout(function(){
+  if(!isStandalone() && !deferredPrompt && !window.__bip && !isIOS()){
+    setStatus("Instalação automática ainda não liberada pelo navegador. Toque no botão para ver o motivo.", "");
+  }
+}, 5000);
 if("serviceWorker" in navigator){
   window.addEventListener("load", function(){
     navigator.serviceWorker.register("sw.js", {scope: "./", updateViaCache: "none"})
